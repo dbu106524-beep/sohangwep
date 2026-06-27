@@ -536,7 +536,11 @@ time { color: var(--muted); font-size: 12px; }
 
 .lead { color: var(--muted); font-size: 19px; line-height: 1.7; }
 .article-body { color: #dce9ff; line-height: 1.82; }
-.article-body p { margin: 0 0 18px; }
+.article-body p {
+  margin: 0 0 18px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
 .article-body ul { margin: 0 0 18px; padding-left: 22px; }
 .notice-box { border-radius: var(--radius); padding: 18px; margin: 18px 0; color: var(--accent); background: rgba(255, 211, 111, 0.08); }
 
