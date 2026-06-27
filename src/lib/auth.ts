@@ -53,6 +53,21 @@ function getAvatarUrl(user: User, profile: Profile | null) {
   return profile?.avatar_url || getMetadataString(user, ["avatar_url", "picture"]);
 }
 
+async function getMinecraftLinkByDiscordId(supabase: SupabaseServerClient, discordId: string) {
+  const { data, error } = await supabase
+    .from("minecraft_links")
+    .select("minecraft_uuid,minecraft_account_name,minecraft_name,community_role_verified")
+    .eq("discord_id", discordId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[Supabase fallback] syncMinecraftLink:", error.message);
+    return null;
+  }
+
+  return data;
+}
+
 export async function syncCurrentUserProfile(user: User, supabaseClient?: SupabaseServerClient) {
   if (!hasSupabaseEnv()) {
     return;
@@ -68,7 +83,6 @@ export async function syncCurrentUserProfile(user: User, supabaseClient?: Supaba
 
   const serviceSupabase = await createSupabaseServiceClient().catch(() => null);
   const supabase = serviceSupabase ?? supabaseClient ?? (await createSupabaseServerClient());
-
   const { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
 
   if (error) {
@@ -80,17 +94,7 @@ export async function syncCurrentUserProfile(user: User, supabaseClient?: Supaba
     return;
   }
 
-  const { data: link, error: linkError } = await supabase
-    .from("minecraft_links")
-    .select("minecraft_uuid,minecraft_account_name,minecraft_name,community_role_verified")
-    .eq("discord_id", discordId)
-    .maybeSingle();
-
-  if (linkError) {
-    console.warn("[Supabase fallback] syncMinecraftLink:", linkError.message);
-    return;
-  }
-
+  const link = await getMinecraftLinkByDiscordId(supabase, discordId);
   if (link) {
     const { error: updateError } = await supabase
       .from("profiles")
@@ -129,14 +133,27 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
-
+  let { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   const discordId =
     getDiscordIdFromUser(user) ?? profile?.discord_id ?? getMetadataString(user, ["provider_id", "sub", "discord_id"]);
+
+  if (discordId && profile && !profile.minecraft_uuid) {
+    const link = await getMinecraftLinkByDiscordId(supabase, discordId);
+    if (link) {
+      const patch = {
+        minecraft_uuid: link.minecraft_uuid,
+        minecraft_account_name: link.minecraft_account_name,
+        minecraft_name: link.minecraft_name,
+        community_role_verified: link.community_role_verified,
+      };
+
+      const { error: updateError } = await supabase.from("profiles").update(patch).eq("id", user.id);
+      if (!updateError) {
+        profile = { ...profile, ...patch };
+      }
+    }
+  }
+
   const displayName = getDisplayName(user, profile);
   const avatarUrl = getAvatarUrl(user, profile);
 
