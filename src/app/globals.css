@@ -378,6 +378,20 @@ body::before {
   align-items: flex-start;
 }
 
+.community-action-status,
+.community-action-error {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.community-action-error {
+  color: #ffb4b4;
+}
+
 .delete-confirm {
   position: relative;
 }
@@ -432,6 +446,11 @@ body::before {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.075);
+}
+
+.comment-card-pending {
+  border-color: rgba(255, 211, 111, 0.44);
+  opacity: 0.82;
 }
 
 .comment-card-head {
