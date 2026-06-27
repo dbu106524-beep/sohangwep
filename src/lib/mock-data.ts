@@ -1,0 +1,154 @@
+import type { Guide, Notice, Product, Profile, Purchase } from "@/lib/types";
+
+export const mockProfile: Profile = {
+  id: "demo-user",
+  discord_id: "123456789012345678",
+  display_name: "별빛탐험가",
+  avatar_url: null,
+  minecraft_uuid: null,
+  minecraft_account_name: "StarMiner",
+  minecraft_name: "StarMiner",
+  community_role_verified: true,
+  cash_balance: 12800,
+  role: "admin",
+  created_at: "2026-06-01T00:00:00.000Z",
+};
+
+export const notices: Notice[] = [
+  {
+    id: "notice-1",
+    title: "소행성 시즌 2: 별빛 광산 업데이트",
+    slug: "season-2-starlight-mine",
+    excerpt: "새로운 광산, 코스튬, 주말 탐사 이벤트가 열립니다.",
+    content:
+      "소행성 시즌 2가 시작됩니다. 별빛 광산에서는 희귀 광물과 한정 칭호를 획득할 수 있으며, 주말에는 파티 보너스가 적용됩니다.",
+    category: "update",
+    image_url: null,
+    published: true,
+    created_at: "2026-06-08T09:00:00.000Z",
+  },
+  {
+    id: "notice-2",
+    title: "커뮤니티 이용 규칙 안내",
+    slug: "community-rules",
+    excerpt: "모두가 편하게 머무를 수 있도록 기본 규칙을 정리했어요.",
+    content:
+      "욕설, 도배, 사칭, 현금거래 유도는 제재 대상입니다. 신고는 디스코드 티켓으로 접수해주세요.",
+    category: "notice",
+    image_url: null,
+    published: true,
+    created_at: "2026-06-05T09:00:00.000Z",
+  },
+  {
+    id: "notice-3",
+    title: "별빛 스크린샷 콘테스트",
+    slug: "starlight-screenshot-event",
+    excerpt: "가장 예쁜 우주 탐험 순간을 공유해주세요.",
+    content:
+      "이벤트 채널에 스크린샷을 올리면 운영진 투표로 보상을 지급합니다. 참가자 전원에게 소량의 스타 크레딧 쿠폰도 제공됩니다.",
+    category: "event",
+    image_url: null,
+    published: true,
+    created_at: "2026-06-02T09:00:00.000Z",
+  },
+];
+
+export const guides: Guide[] = [
+  {
+    id: "guide-1",
+    title: "처음 시작하는 방법",
+    slug: "getting-started",
+    excerpt: "서버 접속부터 첫 장비 세팅까지 빠르게 따라와요.",
+    content:
+      "디스코드 공지 채널에서 서버 주소를 확인하고, 튜토리얼 섬의 퀘스트를 완료하세요. 첫 보상으로 기본 곡괭이와 탐험 식량을 받을 수 있습니다.",
+    icon: "✦",
+  },
+  {
+    id: "guide-2",
+    title: "상점 이용 안내",
+    slug: "shop-guide",
+    excerpt: "구매, 지급, 환불 문의 흐름을 정리했어요.",
+    content:
+      "테스트 모드에서는 실제 결제가 발생하지 않습니다. 정식 결제 연동 후에는 결제 성공 웹훅을 통해 지급 요청이 생성됩니다.",
+    icon: "◌",
+  },
+  {
+    id: "guide-3",
+    title: "광산과 보상 시스템",
+    slug: "mining-rewards",
+    excerpt: "소행성 파편과 희귀 광석을 효율적으로 모으는 법.",
+    content:
+      "일일 광산은 매일 오전 6시에 초기화됩니다. 파티 채굴 보너스는 최대 4인까지 적용됩니다.",
+    icon: "◆",
+  },
+];
+
+export const products: Product[] = [
+  {
+    id: "product-1",
+    name: "별가루 스타 크레딧 5,000",
+    slug: "stardust-cash-5000",
+    description: "가볍게 시작하기 좋은 기본 스타 크레딧 충전권",
+    details:
+      "구매 완료 후 프로필 스타 크레딧 잔액에 5,000 스타 크레딧이 반영됩니다. 테스트 모드에서는 즉시 성공 화면으로 이동합니다.",
+    price_krw: 5000,
+    cash_amount: 5000,
+    image_url: null,
+    minecraft_item_key: "cash_5000",
+    active: true,
+    created_at: "2026-06-01T00:00:00.000Z",
+  },
+  {
+    id: "product-2",
+    name: "은하 탐험 패키지",
+    slug: "galaxy-explorer-pack",
+    description: "한정 칭호, 코스튬 상자, 스타 크레딧이 포함된 인기 상품",
+    details:
+      "은하 탐험가 칭호 1개, 코스튬 상자 3개, 12,000 스타 크레딧이 포함됩니다. 지급 API 연동 후 서버 우편함으로 전달됩니다.",
+    price_krw: 12000,
+    cash_amount: 12000,
+    image_url: null,
+    minecraft_item_key: "galaxy_explorer_pack",
+    active: true,
+    created_at: "2026-06-01T00:00:00.000Z",
+  },
+  {
+    id: "product-3",
+    name: "소행성 프리미엄 번들",
+    slug: "asteroid-premium-bundle",
+    description: "월간 추천 번들. 스타 크레딧과 꾸미기 보상을 함께 받아요.",
+    details:
+      "25,000 스타 크레딧, 프리미엄 코스튬 상자 5개, 별빛 날개 체험권 7일이 포함됩니다.",
+    price_krw: 25000,
+    cash_amount: 25000,
+    image_url: null,
+    minecraft_item_key: "asteroid_premium_bundle",
+    active: true,
+    created_at: "2026-06-01T00:00:00.000Z",
+  },
+];
+
+export const purchases: Purchase[] = [
+  {
+    id: "purchase-1",
+    user_id: "demo-user",
+    product_id: "product-2",
+    product_name: "은하 탐험 패키지",
+    amount_krw: 12000,
+    status: "fulfilled",
+    payment_provider: "test",
+    payment_reference: "test_checkout_0001",
+    created_at: "2026-06-08T12:30:00.000Z",
+  },
+  {
+    id: "purchase-2",
+    user_id: "demo-user",
+    product_id: "product-1",
+    product_name: "별가루 스타 크레딧 5,000",
+    amount_krw: 5000,
+    status: "paid",
+    payment_provider: "test",
+    payment_reference: "test_checkout_0002",
+    created_at: "2026-06-07T18:10:00.000Z",
+  },
+];
