@@ -10,33 +10,6 @@ body::before {
   margin: 0 0 80px;
 }
 
-.ad-rails {
-  position: fixed;
-  inset: 130px 0 auto;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.ad-slot {
-  position: absolute;
-  top: 0;
-  width: 160px;
-  min-height: 600px;
-  border: 1px dashed rgba(255, 221, 153, 0.18);
-  border-radius: var(--radius);
-  background: rgba(7, 12, 29, 0.16);
-  opacity: 0.34;
-  overflow: hidden;
-}
-
-.ad-slot-left {
-  right: calc(50vw + 626px);
-}
-
-.ad-slot-right {
-  left: calc(50vw + 626px);
-}
-
 .space-effects,
 .random-stars,
 .comet-field,
@@ -626,12 +599,6 @@ body::before {
 
   .comet-field span:nth-child(n + 3),
   .random-stars span:nth-child(n + 56) {
-    display: none;
-  }
-}
-
-@media (max-width: 1540px) {
-  .ad-rails {
     display: none;
   }
 }

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AdRails } from "@/components/ad-rails";
 import { BodyPageMarker } from "@/components/body-page-marker";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -38,7 +37,6 @@ export default async function RootLayout({
       <body>
         <BodyPageMarker />
         <SpaceEffects />
-        <AdRails />
         <SiteHeader user={user} />
         {children}
         <SiteFooter user={user} />
