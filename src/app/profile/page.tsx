@@ -19,12 +19,12 @@ export default async function ProfilePage() {
       <PageHero
         eyebrow="My orbit"
         title={`${user.name}의 프로필`}
-        description="Discord 로그인, 스타 크레딧 잔액, 마인크래프트 닉네임, 구매 내역을 확인하는 공간입니다."
+        description="Discord 로그인 상태, 스타 크레딧, 마인크래프트 닉네임, 구매 내역을 확인하는 공간입니다."
       />
 
       <section className="section-shell grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
         <aside className="glass-card rounded-3xl p-7 profile-panel-readable">
-          <p className="text-sm font-black text-white">스타 크레딧 잔액</p>
+          <p className="text-sm font-black text-white">스타 크레딧</p>
           <p className="mt-2 text-4xl font-black text-white">
             {(user.profile?.cash_balance ?? 0).toLocaleString("ko-KR")}
           </p>
