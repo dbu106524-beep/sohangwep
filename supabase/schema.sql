@@ -118,6 +118,7 @@ create table if not exists public.community_post_views (
 create table if not exists public.community_comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.community_posts(id) on delete cascade,
+  parent_id uuid references public.community_comments(id) on delete cascade,
   author_id uuid not null references public.profiles(id) on delete cascade,
   author_name text not null,
   author_avatar_url text,
@@ -149,6 +150,7 @@ create index if not exists community_posts_category_created_idx on public.commun
 create index if not exists community_posts_author_created_idx on public.community_posts (author_id, created_at desc);
 create index if not exists community_posts_featured_idx on public.community_posts (featured desc, featured_at desc, created_at desc);
 create index if not exists community_comments_post_created_idx on public.community_comments (post_id, created_at asc);
+create index if not exists community_comments_parent_created_idx on public.community_comments (parent_id, created_at asc);
 create index if not exists community_likes_post_idx on public.community_likes (post_id);
 create index if not exists community_post_views_user_idx on public.community_post_views (user_id, created_at desc);
 
@@ -351,6 +353,16 @@ on public.community_posts for insert
 to authenticated
 with check (
   author_id = (select auth.uid())
+  and (
+    parent_id is null
+    or exists (
+      select 1
+      from public.community_comments parent_comment
+      where parent_comment.id = parent_id
+        and parent_comment.post_id = post_id
+        and parent_comment.parent_id is null
+    )
+  )
   and exists (
     select 1
     from public.profiles

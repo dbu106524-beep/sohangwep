@@ -98,6 +98,7 @@ export type CommunityPost = {
 export type CommunityComment = {
   id: string;
   post_id: string;
+  parent_id: string | null;
   author_id: string;
   author_name: string;
   author_avatar_url: string | null;
@@ -171,7 +172,7 @@ export type Database = {
       };
       community_comments: {
         Row: CommunityComment;
-        Insert: Omit<CommunityComment, "id" | "created_at"> & Partial<Pick<CommunityComment, "id" | "created_at">>;
+        Insert: Omit<CommunityComment, "id" | "created_at"> & Partial<Pick<CommunityComment, "id" | "created_at" | "parent_id">>;
         Update: Partial<CommunityComment>;
         Relationships: [];
       };

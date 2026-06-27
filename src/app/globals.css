@@ -491,6 +491,11 @@ body::before {
   margin: 0 0 14px;
 }
 
+.comment-thread {
+  display: grid;
+  gap: 8px;
+}
+
 .comment-card {
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -508,6 +513,13 @@ body::before {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.comment-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .comment-card p {
@@ -535,6 +547,47 @@ body::before {
 
 .text-danger-button:hover {
   color: #ffffff;
+}
+
+.text-link-button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 950;
+  padding: 6px 0;
+}
+
+.text-link-button:hover {
+  color: #ffffff;
+}
+
+.reply-list {
+  display: grid;
+  gap: 8px;
+  margin-left: 34px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(255, 211, 111, 0.28);
+}
+
+.reply-card {
+  background: rgba(255, 255, 255, 0.052);
+}
+
+.reply-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 211, 111, 0.26);
+  border-radius: var(--radius);
+  background: rgba(255, 211, 111, 0.08);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .comment-form {

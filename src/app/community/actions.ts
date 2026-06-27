@@ -65,7 +65,7 @@ async function resolveCommunityImageUrl(formData: FormData, fallback: string | n
     throw new Error("이미지는 6MB 이하만 업로드할 수 있습니다.");
   }
 
-  const supabase = await createSupabaseServiceClient();
+  const supabase = await createSupabaseServerClient();
   const bucket = "community-images";
   await supabase.storage.createBucket(bucket, { public: true }).catch(() => null);
 
@@ -246,15 +246,34 @@ async function setCommunityFeatured(id: string, featured: boolean) {
 export async function createCommunityCommentFastAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "");
   const postId = String(formData.get("post_id") ?? "");
+  const parentId = String(formData.get("parent_id") ?? "").trim() || null;
   const user = await requireCurrentUser(slug ? `/community/${slug}` : "/community");
 
   assertCommunityWriter(user);
   const content = getRequiredText(formData, "content", "댓글");
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseServiceClient();
+
+  if (parentId) {
+    const { data: parentComment, error: parentError } = await supabase
+      .from("community_comments")
+      .select("id,post_id,parent_id")
+      .eq("id", parentId)
+      .maybeSingle();
+
+    if (parentError) {
+      throw new Error(`답글 대상 확인에 실패했습니다: ${parentError.message}`);
+    }
+
+    if (!parentComment || parentComment.post_id !== postId || parentComment.parent_id) {
+      throw new Error("답글을 달 댓글을 찾을 수 없습니다.");
+    }
+  }
+
   const { data, error } = await supabase
     .from("community_comments")
     .insert({
       post_id: postId,
+      parent_id: parentId,
       author_id: user.id,
       author_name: communityAuthorName(user),
       author_avatar_url: communityAuthorAvatar(user),

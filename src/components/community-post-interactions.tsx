@@ -18,10 +18,11 @@ type Props = {
   canWriteComment: boolean;
 };
 
-function getCommentDraft(user: CurrentUser, postId: string, content: string): CommunityComment {
+function getCommentDraft(user: CurrentUser, postId: string, content: string, parentId: string | null): CommunityComment {
   return {
     id: `draft-${crypto.randomUUID()}`,
     post_id: postId,
+    parent_id: parentId,
     author_id: user.id,
     author_name: user.profile?.minecraft_name || user.name,
     author_avatar_url: user.profile?.minecraft_uuid
@@ -39,8 +40,25 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
   const [featured, setFeatured] = useState(Boolean(post.featured));
   const [localComments, setLocalComments] = useState(comments);
   const [commentText, setCommentText] = useState("");
+  const [activeReplyTarget, setActiveReplyTarget] = useState<CommunityComment | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const commentCountLabel = useMemo(() => localComments.length.toLocaleString("ko-KR"), [localComments.length]);
+  const { rootComments, repliesByParent } = useMemo(() => {
+    const roots: CommunityComment[] = [];
+    const replies = new Map<string, CommunityComment[]>();
+
+    for (const comment of localComments) {
+      if (comment.parent_id) {
+        const group = replies.get(comment.parent_id) ?? [];
+        group.push(comment);
+        replies.set(comment.parent_id, group);
+      } else {
+        roots.push(comment);
+      }
+    }
+
+    return { rootComments: roots, repliesByParent: replies };
+  }, [localComments]);
 
   function runAction(action: () => Promise<void>, onError?: () => void) {
     setErrorMessage(null);
@@ -115,8 +133,10 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
       return;
     }
 
-    const draft = getCommentDraft(user, post.id, content);
+    const parentId = activeReplyTarget?.parent_id ?? activeReplyTarget?.id ?? null;
+    const draft = getCommentDraft(user, post.id, content, parentId);
     setCommentText("");
+    setActiveReplyTarget(null);
     setLocalComments((current) => [...current, draft]);
 
     runAction(
@@ -124,6 +144,9 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
         const formData = new FormData();
         formData.set("post_id", post.id);
         formData.set("slug", post.slug);
+        if (parentId) {
+          formData.set("parent_id", parentId);
+        }
         formData.set("content", content);
         const result = await createCommunityCommentFastAction(formData);
         setLocalComments((current) => current.map((comment) => (comment.id === draft.id ? result.comment : comment)));
@@ -131,6 +154,7 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
       () => {
         setLocalComments((current) => current.filter((comment) => comment.id !== draft.id));
         setCommentText(content);
+        setActiveReplyTarget(activeReplyTarget);
       },
     );
   }
@@ -141,7 +165,7 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
     }
 
     const previousComments = localComments;
-    setLocalComments((current) => current.filter((comment) => comment.id !== commentId));
+    setLocalComments((current) => current.filter((comment) => comment.id !== commentId && comment.parent_id !== commentId));
 
     runAction(
       async () => {
@@ -194,30 +218,89 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
         </div>
 
         <div className="comment-list">
-          {localComments.map((comment) => {
+          {rootComments.map((comment) => {
             const canDeleteComment = Boolean(user && (user.id === comment.author_id || user.isAdmin));
             const isDraft = comment.id.startsWith("draft-");
+            const replies = repliesByParent.get(comment.id) ?? [];
 
             return (
-              <div key={comment.id} className={`comment-card ${isDraft ? "comment-card-pending" : ""}`}>
-                <div className="comment-card-head">
-                  <div className="author-line">
-                    {comment.author_avatar_url ? <img src={comment.author_avatar_url} alt="" /> : <span aria-hidden="true" />}
-                    <strong>{comment.author_name}</strong>
-                    <time>{isDraft ? "방금 전" : formatDate(comment.created_at)}</time>
+              <div key={comment.id} className="comment-thread">
+                <div className={`comment-card ${isDraft ? "comment-card-pending" : ""}`}>
+                  <div className="comment-card-head">
+                    <div className="author-line">
+                      {comment.author_avatar_url ? <img src={comment.author_avatar_url} alt="" /> : <span aria-hidden="true" />}
+                      <strong>{comment.author_name}</strong>
+                      <time>{isDraft ? "방금 전" : formatDate(comment.created_at)}</time>
+                    </div>
+                    <div className="comment-card-actions">
+                      {user && canWriteComment ? (
+                        <button
+                          type="button"
+                          className="text-link-button"
+                          onClick={() => setActiveReplyTarget(comment)}
+                          disabled={isPending || isDraft}
+                        >
+                          답글
+                        </button>
+                      ) : null}
+                      {canDeleteComment ? (
+                        <button
+                          type="button"
+                          className="text-danger-button"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          disabled={isPending || isDraft}
+                        >
+                          삭제
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                  {canDeleteComment ? (
-                    <button
-                      type="button"
-                      className="text-danger-button"
-                      onClick={() => handleDeleteComment(comment.id)}
-                      disabled={isPending || isDraft}
-                    >
-                      삭제
-                    </button>
-                  ) : null}
+                  <p>{comment.content}</p>
                 </div>
-                <p>{comment.content}</p>
+
+                {replies.length ? (
+                  <div className="reply-list">
+                    {replies.map((reply) => {
+                      const canDeleteReply = Boolean(user && (user.id === reply.author_id || user.isAdmin));
+                      const isReplyDraft = reply.id.startsWith("draft-");
+
+                      return (
+                        <div key={reply.id} className={`comment-card reply-card ${isReplyDraft ? "comment-card-pending" : ""}`}>
+                          <div className="comment-card-head">
+                            <div className="author-line">
+                              {reply.author_avatar_url ? <img src={reply.author_avatar_url} alt="" /> : <span aria-hidden="true" />}
+                              <strong>{reply.author_name}</strong>
+                              <time>{isReplyDraft ? "방금 전" : formatDate(reply.created_at)}</time>
+                            </div>
+                            <div className="comment-card-actions">
+                              {user && canWriteComment ? (
+                                <button
+                                  type="button"
+                                  className="text-link-button"
+                                  onClick={() => setActiveReplyTarget(comment)}
+                                  disabled={isPending || isReplyDraft}
+                                >
+                                  답글
+                                </button>
+                              ) : null}
+                              {canDeleteReply ? (
+                                <button
+                                  type="button"
+                                  className="text-danger-button"
+                                  onClick={() => handleDeleteComment(reply.id)}
+                                  disabled={isPending || isReplyDraft}
+                                >
+                                  삭제
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                          <p>{reply.content}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             );
           })}
@@ -226,6 +309,16 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
         {user ? (
           canWriteComment ? (
             <form onSubmit={handleCommentSubmit} className="comment-form">
+              {activeReplyTarget ? (
+                <div className="reply-target">
+                  <span>
+                    <strong>{activeReplyTarget.author_name}</strong>님에게 답글 작성 중
+                  </span>
+                  <button type="button" className="text-link-button" onClick={() => setActiveReplyTarget(null)}>
+                    취소
+                  </button>
+                </div>
+              ) : null}
               <textarea
                 name="content"
                 className="admin-textarea"
