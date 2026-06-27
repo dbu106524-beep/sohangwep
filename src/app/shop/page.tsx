@@ -1,6 +1,5 @@
 import { ProductCard } from "@/components/cards";
 import { getProducts } from "@/lib/data";
-import { siteSettings } from "@/lib/site-content";
 
 export default async function ShopPage() {
   const products = await getProducts();
@@ -10,7 +9,7 @@ export default async function ShopPage() {
       <section className="page-hero art-hero shop-hero">
         <span className="eyebrow">SHOP</span>
         <h1>상점</h1>
-        <p>{siteSettings.shopIntro}</p>
+        <p>소행성에서 사용할 수 있는 상품과 후원 아이템을 둘러보세요.</p>
       </section>
 
       {products.length ? (
@@ -21,8 +20,8 @@ export default async function ShopPage() {
         </section>
       ) : (
         <div className="empty-state">
-          <h3>등록된 상품이 없습니다</h3>
-          <p>관리자 화면에서 상점 상품을 직접 추가하면 이곳에 표시됩니다.</p>
+          <h3>상점 준비 중입니다</h3>
+          <p>곧 새로운 상품과 후원 아이템을 만나볼 수 있어요.</p>
         </div>
       )}
     </main>
