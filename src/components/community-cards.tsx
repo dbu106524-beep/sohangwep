@@ -9,7 +9,7 @@ export const communityCategoryLabels: Record<CommunityCategory, string> = {
 };
 
 export const communityCategoryDescriptions: Record<CommunityCategory, string> = {
-  screenshot: "서버에서 남긴 멋진 장면을 이미지 중심으로 공유하는 공간입니다.",
+  screenshot: "서버에서 찍은 멋진 순간을 이미지 중심으로 공유하는 공간입니다.",
   free: "탐험대원들이 편하게 이야기를 나누는 자유 공간입니다.",
   tips: "플레이 공략, 생활 팁, 노하우를 정리해 공유합니다.",
 };
@@ -57,7 +57,7 @@ function FeaturedBadge({ post }: { post: CommunityPost }) {
 
 export function ScreenshotCard({ post }: { post: CommunityPost }) {
   return (
-    <Link href={`/community/${post.slug}`} className={`screenshot-card ${post.featured ? "featured" : ""}`}>
+    <Link href={`/community/${encodeURIComponent(post.slug)}`} className={`screenshot-card ${post.featured ? "featured" : ""}`}>
       <div className="screenshot-image">
         {post.image_url ? <img src={post.image_url} alt={post.title} /> : <span>SCREENSHOT</span>}
       </div>
@@ -77,7 +77,7 @@ export function ScreenshotCard({ post }: { post: CommunityPost }) {
 
 export function CommunityListCard({ post }: { post: CommunityPost }) {
   return (
-    <Link href={`/community/${post.slug}`} className={`post-card community-list-card ${post.featured ? "featured" : ""}`}>
+    <Link href={`/community/${encodeURIComponent(post.slug)}`} className={`post-card community-list-card ${post.featured ? "featured" : ""}`}>
       <div className="post-topline">
         <span className="badge">{communityCategoryLabels[post.category]}</span>
         <FeaturedBadge post={post} />

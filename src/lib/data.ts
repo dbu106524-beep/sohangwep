@@ -136,6 +136,16 @@ function mapCommunityPost(row: unknown): CommunityPost {
   };
 }
 
+function communitySlugCandidates(slug: string) {
+  const candidates = new Set([slug]);
+  try {
+    candidates.add(decodeURIComponent(slug));
+  } catch {
+    // Keep the original slug if the browser already provided a decoded value.
+  }
+  return Array.from(candidates).filter(Boolean);
+}
+
 async function decorateCommunityPosts(posts: CommunityPost[], currentUserId?: string | null) {
   if (!hasSupabaseEnv() || posts.length === 0) {
     return posts;
@@ -204,10 +214,12 @@ export async function getCommunityPost(slug: string, options: { incrementView?: 
   }
 
   const supabase = options.incrementView ? await createSupabaseServiceClient() : await createSupabaseServerClient();
+  const slugs = communitySlugCandidates(slug);
   const { data, error } = await supabase
     .from("community_posts")
     .select("*")
-    .eq("slug", slug)
+    .in("slug", slugs)
+    .limit(1)
     .maybeSingle();
 
   if (error) {

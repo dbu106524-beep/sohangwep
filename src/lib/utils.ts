@@ -22,9 +22,10 @@ export function formatDate(value: string) {
 
 export function slugify(input: string) {
   return input
+    .normalize("NFKD")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9가-힣]+/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
 
