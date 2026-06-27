@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServiceClient, hasSupabaseEnv } from "@/lib/supabase/server";
+import { noticeTypeLabels } from "@/lib/site-content";
 import type { Notice } from "@/lib/types";
-import { slugify } from "@/lib/utils";
+import { getSiteUrl, slugify } from "@/lib/utils";
 
 async function assertAdmin() {
   const { allowed } = await requireAdmin();
@@ -67,6 +68,45 @@ async function resolveProductImageUrl(formData: FormData, fallback: string | nul
   return resolveUploadedImageUrl({ formData, bucket: "shop-images", folder: "products", fallback });
 }
 
+async function sendNoticeDiscordNotification(
+  notice: Pick<Notice, "id" | "title" | "slug" | "excerpt" | "image_url" | "category">,
+) {
+  const webhookUrl = process.env.DISCORD_NOTICE_WEBHOOK_URL;
+  if (!webhookUrl) {
+    return;
+  }
+
+  const noticeUrl = new URL(`/notices/${encodeURIComponent(notice.slug || notice.id)}`, getSiteUrl()).toString();
+  const label = noticeTypeLabels[notice.category];
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: "소행성",
+        content: `📢 새 ${label}이 등록되었습니다!\n**${notice.title}**\n${noticeUrl}`,
+        embeds: [
+          {
+            title: notice.title,
+            description: notice.excerpt || `새로운 ${label}을 확인해 주세요.`,
+            url: noticeUrl,
+            color: 16765807,
+            footer: { text: label },
+            image: notice.image_url ? { url: notice.image_url } : undefined,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`[Discord notice webhook] ${response.status} ${await response.text()}`);
+    }
+  } catch (error) {
+    console.warn("[Discord notice webhook]", error);
+  }
+}
+
 export async function createNoticeAction(formData: FormData) {
   await assertAdmin();
 
@@ -76,16 +116,33 @@ export async function createNoticeAction(formData: FormData) {
   }
 
   const title = String(formData.get("title") ?? "");
+  const category = String(formData.get("category") ?? "notice") as Notice["category"];
+  const published = formData.get("published") === "on";
+  const imageUrl = await resolveNoticeImageUrl(formData);
+  const slug = slugify(title) || crypto.randomUUID().slice(0, 8);
   const supabase = await createSupabaseServiceClient();
-  await supabase.from("notices").insert({
-    title,
-    slug: slugify(title) || crypto.randomUUID().slice(0, 8),
-    excerpt: String(formData.get("excerpt") ?? ""),
-    content: String(formData.get("content") ?? ""),
-    category: String(formData.get("category") ?? "notice") as Notice["category"],
-    image_url: await resolveNoticeImageUrl(formData),
-    published: formData.get("published") === "on",
-  });
+  const { data: notice, error } = await supabase
+    .from("notices")
+    .insert({
+      title,
+      slug,
+      excerpt: String(formData.get("excerpt") ?? ""),
+      content: String(formData.get("content") ?? ""),
+      category,
+      image_url: imageUrl,
+      published,
+    })
+    .select("id,title,slug,excerpt,image_url,category")
+    .single();
+
+  if (error) {
+    throw new Error(`공지사항 작성에 실패했습니다: ${error.message}`);
+  }
+
+  if (published && notice) {
+    await sendNoticeDiscordNotification(notice);
+  }
+
   revalidatePath("/notices");
   revalidatePath("/admin/notices");
 }
@@ -106,13 +163,13 @@ export async function updateNoticeAction(formData: FormData) {
   await supabase
     .from("notices")
     .update({
-      title,
-      slug: slugify(title) || currentSlug || id,
-      excerpt: String(formData.get("excerpt") ?? ""),
-      content: String(formData.get("content") ?? ""),
-      category: String(formData.get("category") ?? "notice") as Notice["category"],
-      image_url: await resolveNoticeImageUrl(formData, currentImageUrl),
-      published: formData.get("published") === "on",
+    title,
+    slug: slugify(title) || currentSlug || id,
+    excerpt: String(formData.get("excerpt") ?? ""),
+    content: String(formData.get("content") ?? ""),
+    category: String(formData.get("category") ?? "notice") as Notice["category"],
+    image_url: await resolveNoticeImageUrl(formData, currentImageUrl),
+    published: formData.get("published") === "on",
     })
     .eq("id", id);
   revalidatePath("/notices");
