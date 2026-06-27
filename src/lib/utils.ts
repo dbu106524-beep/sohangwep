@@ -14,6 +14,7 @@ export function formatWon(value: number) {
 
 export function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
     year: "numeric",
     month: "long",
     day: "numeric",
