@@ -520,6 +520,7 @@ body::before {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  position: relative;
 }
 
 .comment-card p {
@@ -547,6 +548,30 @@ body::before {
 
 .text-danger-button:hover {
   color: #ffffff;
+}
+
+.comment-delete-confirm {
+  position: relative;
+}
+
+.comment-delete-confirm[open] {
+  z-index: 5;
+}
+
+.comment-delete-confirm summary {
+  list-style: none;
+}
+
+.comment-delete-box {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: min(260px, calc(100vw - 48px));
+}
+
+.comment-delete-box .button {
+  min-height: 40px;
+  padding: 10px 14px;
 }
 
 .text-link-button {

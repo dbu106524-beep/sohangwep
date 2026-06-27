@@ -244,14 +244,21 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
                         </button>
                       ) : null}
                       {canDeleteComment ? (
-                        <button
-                          type="button"
-                          className="text-danger-button"
-                          onClick={() => handleDeleteComment(comment.id)}
-                          disabled={isPending || isDraft}
-                        >
-                          삭제
-                        </button>
+                        <details className="delete-confirm comment-delete-confirm">
+                          <summary className="text-danger-button">삭제</summary>
+                          <div className="delete-confirm-box comment-delete-box">
+                            <strong>정말 삭제할까요?</strong>
+                            <p>삭제한 댓글과 답글은 되돌릴 수 없습니다.</p>
+                            <button
+                              type="button"
+                              className="button danger"
+                              onClick={() => handleDeleteComment(comment.id)}
+                              disabled={isPending || isDraft}
+                            >
+                              최종 삭제
+                            </button>
+                          </div>
+                        </details>
                       ) : null}
                     </div>
                   </div>
@@ -284,14 +291,21 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
                                 </button>
                               ) : null}
                               {canDeleteReply ? (
-                                <button
-                                  type="button"
-                                  className="text-danger-button"
-                                  onClick={() => handleDeleteComment(reply.id)}
-                                  disabled={isPending || isReplyDraft}
-                                >
-                                  삭제
-                                </button>
+                                <details className="delete-confirm comment-delete-confirm">
+                                  <summary className="text-danger-button">삭제</summary>
+                                  <div className="delete-confirm-box comment-delete-box">
+                                    <strong>정말 삭제할까요?</strong>
+                                    <p>삭제한 답글은 되돌릴 수 없습니다.</p>
+                                    <button
+                                      type="button"
+                                      className="button danger"
+                                      onClick={() => handleDeleteComment(reply.id)}
+                                      disabled={isPending || isReplyDraft}
+                                    >
+                                      최종 삭제
+                                    </button>
+                                  </div>
+                                </details>
                               ) : null}
                             </div>
                           </div>
