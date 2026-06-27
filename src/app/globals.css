@@ -466,17 +466,33 @@ body::before {
 }
 
 .community-comments {
-  margin-top: 24px;
+  margin-top: 18px;
+  padding: 28px 32px;
+}
+
+.community-comments .section-head {
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+.community-comments .section-head .eyebrow {
+  font-size: 11px;
+}
+
+.community-comments .section-head h2 {
+  margin-top: 4px;
+  font-size: 28px;
+  line-height: 1.15;
 }
 
 .comment-list {
   display: grid;
-  gap: 12px;
-  margin: 18px 0;
+  gap: 10px;
+  margin: 0 0 14px;
 }
 
 .comment-card {
-  padding: 16px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.075);
@@ -495,7 +511,7 @@ body::before {
 }
 
 .comment-card p {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: #ffffff;
   line-height: 1.7;
 }
@@ -523,8 +539,14 @@ body::before {
 
 .comment-form {
   display: grid;
-  gap: 12px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.comment-form .admin-textarea {
+  min-height: 92px;
+  max-height: 180px;
+  resize: vertical;
 }
 
 @keyframes star-twinkle {
