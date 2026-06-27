@@ -1,5 +1,9 @@
-import type { CommunityPost } from "@/lib/types";
+"use client";
+
+import { useMemo } from "react";
+import { useFormStatus } from "react-dom";
 import { createCommunityPostAction, updateCommunityPostAction } from "@/app/community/actions";
+import type { CommunityPost } from "@/lib/types";
 
 const categoryOptions = [
   { value: "screenshot", label: "스크린샷" },
@@ -7,11 +11,24 @@ const categoryOptions = [
   { value: "tips", label: "팁과 노하우" },
 ] as const;
 
+function SubmitButton({ editing }: { editing: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" className="button primary" disabled={pending} aria-disabled={pending}>
+      {pending ? "처리 중..." : editing ? "수정 완료" : "글 올리기"}
+    </button>
+  );
+}
+
 export function CommunityForm({ post }: { post?: CommunityPost }) {
   const action = post ? updateCommunityPostAction : createCommunityPostAction;
+  const submissionId = useMemo(() => crypto.randomUUID().slice(0, 12), []);
 
   return (
     <form action={action} className="admin-panel community-form">
+      <input type="hidden" name="submission_id" value={submissionId} />
+
       {post ? (
         <>
           <input type="hidden" name="id" value={post.id} />
@@ -54,9 +71,7 @@ export function CommunityForm({ post }: { post?: CommunityPost }) {
       </label>
 
       <div className="admin-actions">
-        <button type="submit" className="button primary">
-          {post ? "수정 완료" : "글 올리기"}
-        </button>
+        <SubmitButton editing={Boolean(post)} />
       </div>
     </form>
   );

@@ -24,6 +24,14 @@ function getRequiredText(formData: FormData, key: string, label: string) {
   return value;
 }
 
+function getSubmissionId(formData: FormData) {
+  return String(formData.get("submission_id") ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 48);
+}
+
 function minecraftHeadUrl(minecraftUuid: string | null | undefined) {
   return minecraftUuid ? `https://mc-heads.net/avatar/${minecraftUuid}/64` : null;
 }
@@ -96,7 +104,9 @@ export async function createCommunityPostAction(formData: FormData) {
   const title = getRequiredText(formData, "title", "제목");
   const category = getCategory(formData.get("category"));
   const content = getRequiredText(formData, "content", "내용");
-  const slug = `${slugify(title) || "post"}-${crypto.randomUUID().slice(0, 8)}`;
+  const submissionId = getSubmissionId(formData) || crypto.randomUUID().slice(0, 12);
+  const slugBase = slugify(title) || "post";
+  const slug = `${slugBase}-${submissionId}`;
   const imageUrl = await resolveCommunityImageUrl(formData);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("community_posts").insert({
@@ -111,11 +121,15 @@ export async function createCommunityPostAction(formData: FormData) {
   });
 
   if (error) {
+    if (error.code === "23505") {
+      revalidateCommunity(slug);
+      redirect(`/community/${encodeURIComponent(slug)}`);
+    }
     throw new Error(`커뮤니티 글 등록에 실패했습니다: ${error.message}`);
   }
 
   revalidateCommunity(slug);
-  redirect(`/community/${slug}`);
+  redirect(`/community/${encodeURIComponent(slug)}`);
 }
 
 export async function updateCommunityPostAction(formData: FormData) {
@@ -138,7 +152,7 @@ export async function updateCommunityPostAction(formData: FormData) {
   const category = getCategory(formData.get("category"));
   const content = getRequiredText(formData, "content", "내용");
   const imageUrl = await resolveCommunityImageUrl(formData, currentImageUrl);
-  const supabase = await createSupabaseServerClient();
+  const supabase = user.isAdmin ? await createSupabaseServiceClient() : await createSupabaseServerClient();
   const { error } = await supabase
     .from("community_posts")
     .update({
@@ -155,7 +169,7 @@ export async function updateCommunityPostAction(formData: FormData) {
   }
 
   revalidateCommunity(currentSlug);
-  redirect(`/community/${currentSlug}`);
+  redirect(`/community/${encodeURIComponent(currentSlug)}`);
 }
 
 export async function deleteCommunityPostAction(formData: FormData) {
@@ -169,12 +183,12 @@ export async function deleteCommunityPostAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "");
   const post = await getCommunityPost(slug);
 
-  if (!post || post.author_id !== user.id) {
+  if (!post || (post.author_id !== user.id && !user.isAdmin)) {
     throw new Error("삭제 권한이 없습니다.");
   }
 
   if (hasSupabaseEnv()) {
-    const supabase = await createSupabaseServerClient();
+    const supabase = user.isAdmin ? await createSupabaseServiceClient() : await createSupabaseServerClient();
     const { error } = await supabase.from("community_posts").delete().eq("id", id);
     if (error) {
       throw new Error(`커뮤니티 글 삭제에 실패했습니다: ${error.message}`);
@@ -183,88 +197,6 @@ export async function deleteCommunityPostAction(formData: FormData) {
 
   revalidateCommunity(slug);
   redirect("/community");
-}
-
-export async function createCommunityCommentAction(formData: FormData) {
-  const slug = String(formData.get("slug") ?? "");
-  const postId = String(formData.get("post_id") ?? "");
-  const user = await requireCurrentUser(slug ? `/community/${slug}` : "/community");
-
-  if (!hasSupabaseEnv()) {
-    redirect(slug ? `/community/${slug}` : "/community");
-  }
-
-  assertCommunityWriter(user);
-  const content = getRequiredText(formData, "content", "댓글");
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("community_comments").insert({
-    post_id: postId,
-    author_id: user.id,
-    author_name: communityAuthorName(user),
-    author_avatar_url: communityAuthorAvatar(user),
-    content,
-  });
-
-  if (error) {
-    throw new Error(`댓글 등록에 실패했습니다: ${error.message}`);
-  }
-
-  revalidateCommunity(slug);
-  redirect(slug ? `/community/${slug}` : "/community");
-}
-
-export async function deleteCommunityCommentAction(formData: FormData) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login?next=%2Fcommunity");
-  }
-
-  const id = String(formData.get("id") ?? "");
-  const slug = String(formData.get("slug") ?? "");
-
-  if (!id) {
-    throw new Error("삭제할 댓글을 찾을 수 없습니다.");
-  }
-
-  if (hasSupabaseEnv()) {
-    const supabase = await createSupabaseServiceClient();
-    const { data: comment, error: readError } = await supabase
-      .from("community_comments")
-      .select("id,author_id")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (readError) {
-      throw new Error(`댓글 확인에 실패했습니다: ${readError.message}`);
-    }
-
-    if (!comment || (comment.author_id !== user.id && !user.isAdmin)) {
-      throw new Error("댓글 삭제 권한이 없습니다.");
-    }
-
-    const { error } = await supabase.from("community_comments").delete().eq("id", id);
-    if (error) {
-      throw new Error(`댓글 삭제에 실패했습니다: ${error.message}`);
-    }
-  }
-
-  revalidateCommunity(slug);
-  redirect(slug ? `/community/${slug}` : "/community");
-}
-
-export async function toggleCommunityLikeAction(formData: FormData) {
-  const slug = String(formData.get("slug") ?? "");
-  const postId = String(formData.get("post_id") ?? "");
-  const user = await requireCurrentUser(slug ? `/community/${slug}` : "/community");
-
-  if (!hasSupabaseEnv()) {
-    redirect(slug ? `/community/${slug}` : "/community");
-  }
-
-  const result = await toggleCommunityLikeForUser(postId, user.id);
-  revalidateCommunity(slug);
-  redirect(slug ? `/community/${slug}` : "/community");
 }
 
 async function toggleCommunityLikeForUser(postId: string, userId: string) {
@@ -291,25 +223,6 @@ async function toggleCommunityLikeForUser(postId: string, userId: string) {
     .eq("post_id", postId);
 
   return { liked, likeCount: count ?? 0 };
-}
-
-export async function toggleCommunityFeaturedAction(formData: FormData) {
-  const user = await getCurrentUser();
-
-  if (!user?.isAdmin) {
-    throw new Error("관리자만 추천 글을 변경할 수 있습니다.");
-  }
-
-  const id = String(formData.get("id") ?? "");
-  const slug = String(formData.get("slug") ?? "");
-  const featured = String(formData.get("featured") ?? "") === "true";
-
-  if (hasSupabaseEnv()) {
-    await setCommunityFeatured(id, !featured);
-  }
-
-  revalidateCommunity(slug);
-  redirect(slug ? `/community/${slug}` : "/community");
 }
 
 async function setCommunityFeatured(id: string, featured: boolean) {

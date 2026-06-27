@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import {
   createCommunityCommentFastAction,
@@ -34,7 +33,6 @@ function getCommentDraft(user: CurrentUser, postId: string, content: string): Co
 }
 
 export function CommunityPostInteractions({ post, comments, user, canWriteComment }: Props) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [liked, setLiked] = useState(Boolean(post.liked_by_current_user));
   const [likeCount, setLikeCount] = useState(post.like_count ?? 0);
@@ -49,17 +47,15 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
     startTransition(async () => {
       try {
         await action();
-        router.refresh();
       } catch (error) {
         onError?.();
         setErrorMessage(error instanceof Error ? error.message : "처리 중 오류가 발생했습니다.");
-        router.refresh();
       }
     });
   }
 
   function handleLike() {
-    if (!user) {
+    if (!user || isPending) {
       return;
     }
 
@@ -86,10 +82,11 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
   }
 
   function handleFeatured() {
-    if (!user?.isAdmin) {
+    if (!user?.isAdmin || isPending) {
       return;
     }
 
+    const previousFeatured = featured;
     const nextFeatured = !featured;
     setFeatured(nextFeatured);
 
@@ -98,18 +95,18 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
         const formData = new FormData();
         formData.set("id", post.id);
         formData.set("slug", post.slug);
-        formData.set("featured", String(featured));
+        formData.set("featured", String(previousFeatured));
         const result = await toggleCommunityFeaturedFastAction(formData);
         setFeatured(result.featured);
       },
-      () => setFeatured(!nextFeatured),
+      () => setFeatured(previousFeatured),
     );
   }
 
   function handleCommentSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!user) {
+    if (!user || isPending) {
       return;
     }
 
@@ -139,6 +136,10 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
   }
 
   function handleDeleteComment(commentId: string) {
+    if (isPending || commentId.startsWith("draft-")) {
+      return;
+    }
+
     const previousComments = localComments;
     setLocalComments((current) => current.filter((comment) => comment.id !== commentId));
 
@@ -171,7 +172,7 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
             {liked ? "좋아요 취소" : "좋아요"}
           </button>
         ) : (
-          <Link href={`/login?next=%2Fcommunity%2F${post.slug}`} className="button ghost">
+          <Link href={`/login?next=%2Fcommunity%2F${encodeURIComponent(post.slug)}`} className="button ghost">
             로그인하고 좋아요
           </Link>
         )}
@@ -210,7 +211,7 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
                       type="button"
                       className="text-danger-button"
                       onClick={() => handleDeleteComment(comment.id)}
-                      disabled={isPending}
+                      disabled={isPending || isDraft}
                     >
                       삭제
                     </button>
@@ -243,7 +244,7 @@ export function CommunityPostInteractions({ post, comments, user, canWriteCommen
             <p className="community-write-note">댓글은 디스코드 역할과 마인크래프트 계정 연동이 완료되어야 작성할 수 있습니다.</p>
           )
         ) : (
-          <Link href={`/login?next=%2Fcommunity%2F${post.slug}`} className="button primary">
+          <Link href={`/login?next=%2Fcommunity%2F${encodeURIComponent(post.slug)}`} className="button primary">
             로그인하고 댓글 쓰기
           </Link>
         )}

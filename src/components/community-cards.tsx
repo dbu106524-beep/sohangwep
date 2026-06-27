@@ -103,5 +103,5 @@ export function AuthorLine({ post }: { post: CommunityPost }) {
 }
 
 export function canManageCommunityPost(post: CommunityPost, user: CurrentUser | null) {
-  return Boolean(user && user.id === post.author_id);
+  return Boolean(user && (user.id === post.author_id || user.isAdmin));
 }
