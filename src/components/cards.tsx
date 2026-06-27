@@ -3,9 +3,13 @@ import type { Notice, Product } from "@/lib/types";
 import { noticeTypeLabels } from "@/lib/site-content";
 import { formatDate, formatWon } from "@/lib/utils";
 
+export function getNoticeHref(notice: Pick<Notice, "id" | "slug">) {
+  return `/notices/${encodeURIComponent(notice.slug || notice.id)}`;
+}
+
 export function NoticeCard({ notice }: { notice: Notice }) {
   return (
-    <Link href={`/notices/${notice.slug}`} className="post-card notice-card">
+    <Link href={getNoticeHref(notice)} className="post-card notice-card">
       {notice.image_url ? (
         <div className="post-card-image">
           <img src={notice.image_url} alt="" />

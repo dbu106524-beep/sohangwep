@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NoticeCard } from "@/components/cards";
+import { getNoticeHref, NoticeCard } from "@/components/cards";
 import { getNotices } from "@/lib/data";
 import { getDiscordInviteUrl, noticeTypeLabels, noticeTypePaths, siteSettings, sortNotices } from "@/lib/site-content";
 
@@ -51,7 +51,7 @@ export default async function HomePage() {
         </div>
 
         {latest ? (
-          <Link className="hero-news-strip" href={`/notices/${latest.slug}`}>
+          <Link className="hero-news-strip" href={getNoticeHref(latest)}>
             <span>NEW</span>
             {latest.title}
             <strong>자세히 보기</strong>

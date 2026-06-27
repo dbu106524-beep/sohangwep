@@ -1,7 +1,10 @@
-import { createNoticeAction, deleteNoticeAction, updateNoticeAction } from "@/app/admin/actions";
+import Link from "next/link";
+import { createNoticeAction, deleteNoticeAction } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/auth";
 import { getNotices } from "@/lib/data";
+import { noticeTypeLabels } from "@/lib/site-content";
 import type { Notice } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default async function AdminNoticesPage() {
   const { allowed } = await requireAdmin("/admin/notices");
@@ -47,33 +50,24 @@ export default async function AdminNoticesPage() {
 
         <div className="admin-list">
           {notices.map((notice) => (
-            <form key={notice.id} action={updateNoticeAction} className="glass-card">
-              <input type="hidden" name="id" value={notice.id} />
-              {notice.image_url ? <input type="hidden" name="current_image_url" value={notice.image_url} /> : null}
-              <AdminInput name="title" label="제목" defaultValue={notice.title} required />
-              <AdminInput name="excerpt" label="요약" defaultValue={notice.excerpt} required />
-              <AdminTextarea name="content" label="본문" defaultValue={notice.content} required />
-              <AdminSelect name="category" label="분류" defaultValue={notice.category} />
-              <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={notice.image_url ?? ""} />
-              <label className="admin-field">
-                <span>이미지 파일 업로드</span>
-                <input className="file-input" name="image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-              </label>
-              {notice.image_url ? (
-                <div className="admin-preview-image">
-                  <img src={notice.image_url} alt="" />
-                </div>
-              ) : null}
-              <label className="checkbox-row">
-                <input name="published" type="checkbox" defaultChecked={notice.published} /> 공개
-              </label>
-              <div className="admin-actions">
-                <button className="button primary">수정</button>
-                <button formAction={deleteNoticeAction} className="button danger">
-                  삭제
-                </button>
+            <article key={notice.id} className="glass-card admin-notice-row">
+              <div className="post-topline">
+                <span className="badge">{noticeTypeLabels[notice.category]}</span>
+                <span>{notice.published ? "공개" : "비공개"}</span>
+                <time>{formatDate(notice.created_at)}</time>
               </div>
-            </form>
+              <h3>{notice.title}</h3>
+              <p>{notice.excerpt}</p>
+              <div className="admin-actions">
+                <Link href={`/admin/notices/${notice.id}`} className="button primary">
+                  수정
+                </Link>
+                <form action={deleteNoticeAction}>
+                  <input type="hidden" name="id" value={notice.id} />
+                  <button className="button danger">삭제</button>
+                </form>
+              </div>
+            </article>
           ))}
         </div>
       </section>

@@ -32,18 +32,41 @@ export async function getNotices(options: { includeDrafts?: boolean } = {}): Pro
 
 export async function getNotice(slug: string): Promise<Notice | null> {
   if (!hasSupabaseEnv()) {
-    return fallbackNotices.find((notice) => notice.slug === slug) ?? null;
+    return fallbackNotices.find((notice) => notice.slug === slug || notice.id === slug) ?? null;
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("notices").select("*").eq("slug", slug).maybeSingle();
+  const slugCandidates = new Set([slug]);
+  try {
+    slugCandidates.add(decodeURIComponent(slug));
+  } catch {
+    // Keep the original value if it was already decoded.
+  }
+
+  const candidates = Array.from(slugCandidates).filter(Boolean);
+  const { data, error } = await supabase
+    .from("notices")
+    .select("*")
+    .in("slug", candidates)
+    .limit(1)
+    .maybeSingle();
 
   if (error) {
     logSupabaseFallback("getNotice", error.message);
-    return fallbackNotices.find((notice) => notice.slug === slug) ?? null;
+    return fallbackNotices.find((notice) => candidates.includes(notice.slug) || notice.id === slug) ?? null;
   }
 
-  return data;
+  if (data) {
+    return data;
+  }
+
+  const { data: dataById, error: idError } = await supabase.from("notices").select("*").eq("id", slug).maybeSingle();
+
+  if (idError) {
+    logSupabaseFallback("getNoticeById", idError.message);
+  }
+
+  return dataById ?? null;
 }
 
 export async function getGuides(): Promise<Guide[]> {

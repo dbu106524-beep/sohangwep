@@ -79,7 +79,7 @@ export async function createNoticeAction(formData: FormData) {
   const supabase = await createSupabaseServiceClient();
   await supabase.from("notices").insert({
     title,
-    slug: slugify(title),
+    slug: slugify(title) || crypto.randomUUID().slice(0, 8),
     excerpt: String(formData.get("excerpt") ?? ""),
     content: String(formData.get("content") ?? ""),
     category: String(formData.get("category") ?? "notice") as Notice["category"],
@@ -100,13 +100,14 @@ export async function updateNoticeAction(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "");
+  const currentSlug = String(formData.get("current_slug") ?? "").trim();
   const currentImageUrl = String(formData.get("current_image_url") ?? "").trim() || null;
   const supabase = await createSupabaseServiceClient();
   await supabase
     .from("notices")
     .update({
       title,
-      slug: slugify(title),
+      slug: slugify(title) || currentSlug || id,
       excerpt: String(formData.get("excerpt") ?? ""),
       content: String(formData.get("content") ?? ""),
       category: String(formData.get("category") ?? "notice") as Notice["category"],
