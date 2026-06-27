@@ -15,6 +15,11 @@ async function assertAdmin() {
 }
 
 const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+const discordNewsSubject: Record<Notice["category"], string> = {
+  notice: "공지사항이",
+  update: "업데이트가",
+  event: "이벤트가",
+};
 
 async function resolveUploadedImageUrl({
   formData,
@@ -78,6 +83,7 @@ async function sendNoticeDiscordNotification(
 
   const noticeUrl = new URL(`/notices/${encodeURIComponent(notice.slug || notice.id)}`, getSiteUrl()).toString();
   const label = noticeTypeLabels[notice.category];
+  const subject = discordNewsSubject[notice.category];
 
   try {
     const response = await fetch(webhookUrl, {
@@ -85,7 +91,7 @@ async function sendNoticeDiscordNotification(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "소행성",
-        content: `📢 새 ${label}이 등록되었습니다!\n**${notice.title}**\n${noticeUrl}`,
+        content: `📢 새 ${subject} 등록되었습니다!\n**${notice.title}**\n${noticeUrl}`,
         embeds: [
           {
             title: notice.title,
