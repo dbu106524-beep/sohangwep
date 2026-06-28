@@ -73,11 +73,28 @@ export async function fulfillPaidPurchase(purchaseId: string) {
     throw new Error("Product not found.");
   }
 
+  if (product.product_kind === "goods") {
+    await supabase.from("purchases").update({ status: "paid" }).eq("id", purchase.id);
+
+    return {
+      queued: false,
+      delivered: false,
+      message: "Goods purchase recorded. Minecraft grant skipped.",
+      payload: {
+        orderId: purchase.id,
+        userId: purchase.user_id,
+        productId: product.id,
+        minecraftItemKey: "",
+        quantity: 0,
+      },
+    };
+  }
+
   const grant = await requestMinecraftGrant({
     orderId: purchase.id,
     userId: purchase.user_id,
     productId: product.id,
-    minecraftItemKey: product.minecraft_item_key,
+    minecraftItemKey: product.minecraft_item_key ?? "",
     quantity: 1,
   });
 

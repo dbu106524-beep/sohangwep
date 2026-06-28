@@ -421,6 +421,30 @@ button.button {
   gap: 18px;
 }
 
+.shop-sections,
+.shop-category {
+  display: grid;
+  gap: 18px;
+}
+
+.shop-sections {
+  margin-top: 24px;
+}
+
+.shop-category {
+  scroll-margin-top: 110px;
+}
+
+.shop-tab-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.section-head.compact {
+  margin-top: 8px;
+}
+
 .post-card {
   border-radius: var(--radius);
   padding: 20px;
@@ -685,6 +709,85 @@ time { color: var(--muted); font-size: 12px; }
 .product-body h3 { margin: 14px 0 8px; line-height: 1.35; }
 .product-body p { color: var(--muted); line-height: 1.6; }
 .price { display: inline-block; margin: 4px 0 12px; color: var(--accent); font-size: 20px; }
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.original-price {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: line-through;
+}
+
+.original-price.detail {
+  font-size: 16px;
+}
+
+.discount-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin: 8px 0 4px;
+  border: 1px solid rgba(255, 124, 124, 0.48);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  color: #ffe1e1;
+  background: linear-gradient(135deg, rgba(255, 96, 116, 0.24), rgba(255, 211, 111, 0.14));
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.discount-badge.large {
+  margin: 0;
+  font-size: 14px;
+}
+
+.shop-price-block {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.shop-price-block h2 {
+  margin: 0;
+}
+
+.purchase-box {
+  display: grid;
+  gap: 14px;
+}
+
+.shipping-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 221, 153, 0.18);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.shipping-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.shipping-form input,
+.shipping-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 13px;
+  color: var(--text);
+  background: rgba(10, 12, 28, 0.68);
+}
 
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .chip { cursor: pointer; color: var(--text); }

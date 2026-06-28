@@ -88,11 +88,20 @@ function ProductForm({
       <AdminInput name="name" label="상품명" defaultValue={values?.name} required />
       <AdminInput name="description" label="짧은 설명" defaultValue={values?.description} required />
       <AdminTextarea name="details" label="상세 설명" defaultValue={values?.details} required />
+      <label className="admin-field">
+        <span>상품 종류</span>
+        <select className="admin-input" name="product_kind" defaultValue={values?.product_kind ?? "credit"}>
+          <option value="credit">스타 크레딧</option>
+          <option value="goods">굿즈</option>
+        </select>
+        <small className="field-help">굿즈는 배송 정보 입력을 받고, 스타 크레딧 지급량과 마인크래프트 지급 키를 사용하지 않습니다.</small>
+      </label>
       <div className="admin-grid">
-        <AdminInput name="price_krw" label="가격" type="number" defaultValue={String(values?.price_krw ?? "")} required />
+        <AdminInput name="price_krw" label="가격" type="number" min="0" defaultValue={String(values?.price_krw ?? "")} required />
+        <AdminInput name="discount_percent" label="할인율 (%)" type="number" min="0" max="100" defaultValue={String(values?.discount_percent ?? 0)} required />
         <AdminInput name="cash_amount" label="스타 크레딧 지급량" type="number" defaultValue={String(values?.cash_amount ?? "")} required />
       </div>
-      <AdminInput name="minecraft_item_key" label="마인크래프트 지급 키" defaultValue={values?.minecraft_item_key} required />
+      <AdminInput name="minecraft_item_key" label="마인크래프트 지급 키" defaultValue={values?.minecraft_item_key ?? ""} />
       <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={values?.image_url ?? ""} />
       <label className="admin-field">
         <span>이미지 파일 업로드</span>
@@ -127,6 +136,8 @@ function AdminInput(props: {
   defaultValue?: string;
   required?: boolean;
   type?: string;
+  min?: string;
+  max?: string;
 }) {
   const { label, ...inputProps } = props;
   return (

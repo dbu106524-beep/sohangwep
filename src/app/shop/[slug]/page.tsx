@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PurchaseButton } from "@/components/purchase-button";
 import { getProduct } from "@/lib/data";
-import { formatWon, getImageUrls } from "@/lib/utils";
+import { formatWon, getDiscountedPrice, getImageUrls, normalizeDiscountPercent } from "@/lib/utils";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,6 +11,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
   const imageUrls = getImageUrls(product);
+  const discountPercent = normalizeDiscountPercent(product.discount_percent);
+  const finalPrice = getDiscountedPrice(product.price_krw, discountPercent);
+  const isGoods = product.product_kind === "goods";
 
   return (
     <main>
@@ -32,13 +35,19 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
         <div className="glass-card">
-          <span className="badge">{product.cash_amount.toLocaleString("ko-KR")} 스타 크레딧 지급</span>
-          <h2>{formatWon(product.price_krw)}</h2>
+          <span className="badge">
+            {isGoods ? "굿즈 배송 상품" : `${product.cash_amount.toLocaleString("ko-KR")} 스타 크레딧 지급`}
+          </span>
+          <div className="shop-price-block">
+            {discountPercent > 0 ? <span className="discount-badge large">{discountPercent}% 할인중</span> : null}
+            {discountPercent > 0 ? <span className="original-price detail">{formatWon(product.price_krw)}</span> : null}
+            <h2>{formatWon(finalPrice)}</h2>
+          </div>
           <p>{product.details}</p>
           <div className="notice-box">
             테스트 모드에서는 실제 결제가 발생하지 않습니다. 결제 준비 API, 후원, 지급 요청 구조만 확인합니다.
           </div>
-          <PurchaseButton productId={product.id} />
+          <PurchaseButton productId={product.id} productKind={product.product_kind ?? "credit"} />
         </div>
       </section>
     </main>

@@ -12,6 +12,19 @@ export function formatWon(value: number) {
   }).format(value);
 }
 
+export function normalizeDiscountPercent(value?: number | null) {
+  if (!Number.isFinite(value ?? 0)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(value ?? 0)));
+}
+
+export function getDiscountedPrice(price: number, discountPercent?: number | null) {
+  const percent = normalizeDiscountPercent(discountPercent);
+  return Math.max(0, Math.round(price * ((100 - percent) / 100)));
+}
+
 export function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Notice, Product } from "@/lib/types";
 import { noticeTypeLabels } from "@/lib/site-content";
-import { formatDate, formatWon } from "@/lib/utils";
+import { formatDate, formatWon, getDiscountedPrice, normalizeDiscountPercent } from "@/lib/utils";
 
 export function getNoticeHref(notice: Pick<Notice, "id" | "slug">) {
   return `/notices/${encodeURIComponent(notice.slug || notice.id)}`;
@@ -27,6 +27,10 @@ export function NoticeCard({ notice }: { notice: Notice }) {
 }
 
 export function ProductCard({ product }: { product: Product }) {
+  const discountPercent = normalizeDiscountPercent(product.discount_percent);
+  const finalPrice = getDiscountedPrice(product.price_krw, discountPercent);
+  const isGoods = product.product_kind === "goods";
+
   return (
     <Link href={`/shop/${product.slug}`} className="product-card">
       <div className="product-image">
@@ -40,12 +44,18 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
       <div className="product-body">
         <div className="post-topline">
-          <span className="badge">{product.cash_amount.toLocaleString("ko-KR")} 스타 크레딧</span>
+          <span className="badge">
+            {isGoods ? "굿즈" : `${product.cash_amount.toLocaleString("ko-KR")} 스타 크레딧`}
+          </span>
           <span>{product.active ? "판매중" : "비공개"}</span>
         </div>
         <h3>{product.name}</h3>
         <p>{product.description}</p>
-        <strong className="price">{formatWon(product.price_krw)}</strong>
+        {discountPercent > 0 ? <span className="discount-badge">{discountPercent}% 할인중</span> : null}
+        <div className="price-row">
+          {discountPercent > 0 ? <span className="original-price">{formatWon(product.price_krw)}</span> : null}
+          <strong className="price">{formatWon(finalPrice)}</strong>
+        </div>
       </div>
     </Link>
   );

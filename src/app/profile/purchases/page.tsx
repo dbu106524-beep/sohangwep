@@ -14,7 +14,16 @@ export default async function PurchasesPage() {
         <div className="grid gap-px bg-white/10">
           {history.map((purchase) => (
             <div key={purchase.id} className="grid gap-3 bg-white/10 p-5 text-white md:grid-cols-4 md:items-center">
-              <strong className="text-white">{purchase.product_name}</strong>
+              <div>
+                <strong className="text-white">{purchase.product_name}</strong>
+                {purchase.product_kind === "goods" ? (
+                  <p className="mt-2 text-sm font-bold text-white/75">
+                    {purchase.shipping_recipient} / {purchase.shipping_phone}
+                    <br />
+                    {purchase.shipping_address}
+                  </p>
+                ) : null}
+              </div>
               <span className="font-bold text-white">{formatWon(purchase.amount_krw)}</span>
               <span className="font-bold text-white">{purchase.status}</span>
               <span className="text-sm font-bold text-white/80 md:text-right">{formatDate(purchase.created_at)}</span>

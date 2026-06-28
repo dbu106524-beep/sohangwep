@@ -53,11 +53,13 @@ export type Product = {
   slug: string;
   description: string;
   details: string;
+  product_kind: "credit" | "goods";
   price_krw: number;
+  discount_percent: number;
   cash_amount: number;
   image_url: string | null;
   image_urls?: string[] | null;
-  minecraft_item_key: string;
+  minecraft_item_key: string | null;
   active: boolean;
   created_at: string;
 };
@@ -68,6 +70,11 @@ export type Purchase = {
   product_id: string;
   product_name: string;
   amount_krw: number;
+  product_kind: "credit" | "goods";
+  shipping_recipient: string | null;
+  shipping_phone: string | null;
+  shipping_address: string | null;
+  shipping_message: string | null;
   status: "pending" | "paid" | "fulfilled" | "failed" | "refunded";
   payment_provider: "test" | "ready";
   payment_reference: string | null;

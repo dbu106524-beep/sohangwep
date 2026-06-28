@@ -69,16 +69,25 @@ create table if not exists public.products (
   slug text not null unique,
   description text not null,
   details text not null,
+  product_kind text not null default 'credit' check (product_kind in ('credit', 'goods')),
   price_krw integer not null check (price_krw >= 0),
+  discount_percent integer not null default 0 check (discount_percent >= 0 and discount_percent <= 100),
   cash_amount integer not null default 0 check (cash_amount >= 0),
   image_url text,
   image_urls text[] not null default '{}',
-  minecraft_item_key text not null,
+  minecraft_item_key text,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
 
 alter table public.products add column if not exists image_urls text[] not null default '{}';
+alter table public.products add column if not exists product_kind text not null default 'credit';
+alter table public.products add column if not exists discount_percent integer not null default 0;
+alter table public.products alter column minecraft_item_key drop not null;
+alter table public.products drop constraint if exists products_product_kind_check;
+alter table public.products add constraint products_product_kind_check check (product_kind in ('credit', 'goods'));
+alter table public.products drop constraint if exists products_discount_percent_check;
+alter table public.products add constraint products_discount_percent_check check (discount_percent >= 0 and discount_percent <= 100);
 
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
@@ -86,6 +95,11 @@ create table if not exists public.purchases (
   product_id uuid not null references public.products(id),
   product_name text not null,
   amount_krw integer not null check (amount_krw >= 0),
+  product_kind text not null default 'credit' check (product_kind in ('credit', 'goods')),
+  shipping_recipient text,
+  shipping_phone text,
+  shipping_address text,
+  shipping_message text,
   status text not null default 'pending' check (status in ('pending', 'paid', 'fulfilled', 'failed', 'refunded')),
   payment_provider text not null default 'test',
   payment_reference text,
@@ -121,6 +135,14 @@ create table if not exists public.community_post_views (
   created_at timestamptz not null default now(),
   primary key (post_id, user_id)
 );
+
+alter table public.purchases add column if not exists product_kind text not null default 'credit';
+alter table public.purchases add column if not exists shipping_recipient text;
+alter table public.purchases add column if not exists shipping_phone text;
+alter table public.purchases add column if not exists shipping_address text;
+alter table public.purchases add column if not exists shipping_message text;
+alter table public.purchases drop constraint if exists purchases_product_kind_check;
+alter table public.purchases add constraint purchases_product_kind_check check (product_kind in ('credit', 'goods'));
 
 create table if not exists public.community_comments (
   id uuid primary key default gen_random_uuid(),

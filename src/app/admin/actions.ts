@@ -106,6 +106,19 @@ async function resolveProductImageUrls(formData: FormData, fallback: string[] = 
   return resolveUploadedImageUrls({ formData, bucket: "shop-images", folder: "products", fallback });
 }
 
+function getProductKind(formData: FormData) {
+  return formData.get("product_kind") === "goods" ? "goods" : "credit";
+}
+
+function getDiscountPercent(formData: FormData) {
+  const value = Number(formData.get("discount_percent") ?? 0);
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
 async function sendNoticeDiscordNotification(
   notice: Pick<Notice, "id" | "title" | "slug" | "excerpt" | "image_url" | "category">,
 ) {
@@ -247,6 +260,7 @@ export async function createProductAction(formData: FormData) {
   }
 
   const name = String(formData.get("name") ?? "");
+  const productKind = getProductKind(formData);
   const imageUrls = await resolveProductImageUrls(formData);
   const supabase = await createSupabaseServiceClient();
   await supabase.from("products").insert({
@@ -254,11 +268,13 @@ export async function createProductAction(formData: FormData) {
     slug: slugify(name),
     description: String(formData.get("description") ?? ""),
     details: String(formData.get("details") ?? ""),
+    product_kind: productKind,
     price_krw: Number(formData.get("price_krw") ?? 0),
-    cash_amount: Number(formData.get("cash_amount") ?? 0),
+    discount_percent: getDiscountPercent(formData),
+    cash_amount: productKind === "credit" ? Number(formData.get("cash_amount") ?? 0) : 0,
     image_url: imageUrls[0] ?? null,
     image_urls: imageUrls,
-    minecraft_item_key: String(formData.get("minecraft_item_key") ?? ""),
+    minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
     active: formData.get("active") === "on",
   });
   revalidatePath("/shop");
@@ -275,6 +291,7 @@ export async function updateProductAction(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "");
+  const productKind = getProductKind(formData);
   const currentImages = parseImageList(
     formData.get("current_image_urls"),
     [String(formData.get("current_image_url") ?? "").trim()].filter(Boolean),
@@ -288,11 +305,13 @@ export async function updateProductAction(formData: FormData) {
       slug: slugify(name),
       description: String(formData.get("description") ?? ""),
       details: String(formData.get("details") ?? ""),
+      product_kind: productKind,
       price_krw: Number(formData.get("price_krw") ?? 0),
-      cash_amount: Number(formData.get("cash_amount") ?? 0),
+      discount_percent: getDiscountPercent(formData),
+      cash_amount: productKind === "credit" ? Number(formData.get("cash_amount") ?? 0) : 0,
       image_url: imageUrls[0] ?? null,
       image_urls: imageUrls,
-      minecraft_item_key: String(formData.get("minecraft_item_key") ?? ""),
+      minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
       active: formData.get("active") === "on",
     })
     .eq("id", id);
