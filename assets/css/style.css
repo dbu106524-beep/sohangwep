@@ -417,8 +417,8 @@ button.button {
 .post-grid,
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .shop-sections,
@@ -1231,6 +1231,12 @@ body[data-page="home"] .site-footer {
   width: min(1180px, calc(100% - 32px));
 }
 
+@media (max-width: 1280px) {
+  .shop-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1180px) {
   body[data-page="home"] .site-header {
     width: min(100% - 42px, 1180px);
@@ -1264,13 +1270,16 @@ body[data-page="home"] .site-footer {
   .hero-visual img { min-height: 360px; }
   .dashboard-grid,
   .post-grid,
-  .shop-grid,
   .split-section,
   .guide-route,
   .admin-shell,
   .admin-grid,
   .guide-layout {
     grid-template-columns: 1fr;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .guide-sidebar,
   .admin-sidebar { position: static; }
@@ -1332,6 +1341,18 @@ body[data-page="home"] .site-footer {
     min-height: 470px;
     padding-top: 124px;
     padding-bottom: 58px;
+  }
+}
+
+@media (max-width: 720px) {
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .shop-grid {
+    grid-template-columns: 1fr;
   }
 }
 

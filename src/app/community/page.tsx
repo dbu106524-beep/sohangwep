@@ -81,7 +81,7 @@ export default async function CommunityPage({
                 </Link>
               </div>
               <div className="screenshot-grid">
-                {screenshotPosts.slice(0, 6).map((post) => (
+                {screenshotPosts.slice(0, 10).map((post) => (
                   <ScreenshotCard key={post.id} post={post} />
                 ))}
               </div>
