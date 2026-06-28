@@ -25,6 +25,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Discord login is required." }, { status: 401 });
   }
 
+  if (!user.isAdmin) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
   const orderReference = `test_${Date.now()}`;
   let purchaseId = orderReference;
 
