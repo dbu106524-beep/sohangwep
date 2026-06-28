@@ -80,7 +80,7 @@ function ProductForm({
   const imageUrls = values ? getImageUrls(values) : [];
 
   return (
-    <form action={action} className="glass-card">
+    <form action={action} className="glass-card" encType="multipart/form-data">
       {values ? <input type="hidden" name="id" value={values.id} /> : null}
       {values?.image_url ? <input type="hidden" name="current_image_url" value={values.image_url} /> : null}
       {values ? <input type="hidden" name="current_image_urls" value={JSON.stringify(imageUrls)} /> : null}

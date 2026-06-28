@@ -28,7 +28,7 @@ export function CommunityForm({ post }: { post?: CommunityPost }) {
   const imageUrls = post ? getImageUrls(post) : [];
 
   return (
-    <form action={action} className="admin-panel community-form">
+    <form action={action} className="admin-panel community-form" encType="multipart/form-data">
       <input type="hidden" name="submission_id" value={submissionId} />
 
       {post ? (

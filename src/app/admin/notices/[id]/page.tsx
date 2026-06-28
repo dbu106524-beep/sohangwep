@@ -60,7 +60,7 @@ export default async function AdminNoticeEditPage({
           <time>{formatDate(notice.created_at)}</time>
         </div>
 
-        <form action={updateNoticeAction}>
+        <form action={updateNoticeAction} encType="multipart/form-data">
           <input type="hidden" name="id" value={notice.id} />
           <input type="hidden" name="current_slug" value={notice.slug} />
           {notice.image_url ? <input type="hidden" name="current_image_url" value={notice.image_url} /> : null}

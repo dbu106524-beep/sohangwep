@@ -222,7 +222,7 @@ export async function updateNoticeAction(formData: FormData) {
   );
   const imageUrls = await resolveNoticeImageUrls(formData, currentImages);
   const supabase = await createSupabaseServiceClient();
-  await supabase
+  const { error } = await supabase
     .from("notices")
     .update({
     title,
@@ -235,6 +235,11 @@ export async function updateNoticeAction(formData: FormData) {
     published: formData.get("published") === "on",
     })
     .eq("id", id);
+
+  if (error) {
+    throw new Error(`게시글 수정에 실패했습니다: ${error.message}`);
+  }
+
   revalidatePath("/notices");
   revalidatePath("/admin/notices");
   revalidatePath(`/admin/notices/${id}`);

@@ -31,7 +31,7 @@ export default async function AdminNoticesPage() {
       </section>
 
       <section className="split-section">
-        <form action={createNoticeAction} className="glass-card">
+        <form action={createNoticeAction} className="glass-card" encType="multipart/form-data">
           <h2>새 글 작성</h2>
           <AdminInput name="title" label="제목" required />
           <AdminInput name="excerpt" label="요약" required />
