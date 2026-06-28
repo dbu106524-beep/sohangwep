@@ -5,7 +5,7 @@ import { AuthorLine, canManageCommunityPost, communityCategoryLabels } from "@/c
 import { CommunityPostInteractions } from "@/components/community-post-interactions";
 import { getCurrentUser } from "@/lib/auth";
 import { getCommunityComments, getCommunityPost } from "@/lib/data";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getImageUrls } from "@/lib/utils";
 
 export default async function CommunityPostPage({
   params,
@@ -23,6 +23,7 @@ export default async function CommunityPostPage({
   const comments = await getCommunityComments(post.id);
   const canManage = canManageCommunityPost(post, user);
   const canWriteComment = Boolean(user?.profile?.minecraft_name && user.profile.community_role_verified);
+  const imageUrls = getImageUrls(post);
 
   return (
     <main>
@@ -40,9 +41,11 @@ export default async function CommunityPostPage({
         <h1>{post.title}</h1>
         <AuthorLine post={post} />
 
-        {post.image_url ? (
-          <div className="community-article-image">
-            <img src={post.image_url} alt={post.title} />
+        {imageUrls.length ? (
+          <div className="article-image-gallery community-image-gallery">
+            {imageUrls.map((url) => (
+              <img key={url} src={url} alt={post.title} />
+            ))}
           </div>
         ) : null}
 

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PurchaseButton } from "@/components/purchase-button";
 import { getProduct } from "@/lib/data";
-import { formatWon } from "@/lib/utils";
+import { formatWon, getImageUrls } from "@/lib/utils";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -10,6 +10,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!product) {
     notFound();
   }
+  const imageUrls = getImageUrls(product);
 
   return (
     <main>
@@ -20,9 +21,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </section>
       <section className="split-section">
         <div className="product-card">
-          <div className="product-image">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} />
+          <div className={imageUrls.length > 1 ? "product-image-gallery" : "product-image"}>
+            {imageUrls.length ? (
+              imageUrls.map((url) => <img key={url} src={url} alt={product.name} />)
             ) : (
               <div className="product-placeholder" aria-hidden="true">
                 <span>IMG</span>

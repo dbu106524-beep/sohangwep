@@ -33,6 +33,7 @@ export type Notice = {
   content: string;
   category: "notice" | "update" | "event";
   image_url: string | null;
+  image_urls?: string[] | null;
   published: boolean;
   created_at: string;
 };
@@ -55,6 +56,7 @@ export type Product = {
   price_krw: number;
   cash_amount: number;
   image_url: string | null;
+  image_urls?: string[] | null;
   minecraft_item_key: string;
   active: boolean;
   created_at: string;
@@ -84,6 +86,7 @@ export type CommunityPost = {
   content: string;
   category: CommunityCategory;
   image_url: string | null;
+  image_urls?: string[] | null;
   view_count: number;
   featured: boolean;
   featured_at: string | null;

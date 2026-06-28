@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { getNotice } from "@/lib/data";
 import { noticeTypeLabels } from "@/lib/site-content";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getImageUrls } from "@/lib/utils";
 
 export default async function NoticeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -12,6 +12,7 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ s
   if (!notice) {
     notFound();
   }
+  const imageUrls = getImageUrls(notice);
 
   return (
     <main>
@@ -30,9 +31,11 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ s
         ) : null}
         <h1>{notice.title}</h1>
         <p className="lead">{notice.excerpt}</p>
-        {notice.image_url ? (
-          <div className="article-main-image">
-            <img src={notice.image_url} alt="" />
+        {imageUrls.length ? (
+          <div className="article-image-gallery">
+            {imageUrls.map((url) => (
+              <img key={url} src={url} alt="" />
+            ))}
           </div>
         ) : null}
         <div className="article-body">

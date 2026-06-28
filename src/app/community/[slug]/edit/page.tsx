@@ -6,10 +6,13 @@ import { getCommunityPost } from "@/lib/data";
 
 export default async function EditCommunityPostPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   const { slug } = await params;
+  const { saved } = await searchParams;
   const [post, user] = await Promise.all([getCommunityPost(slug), requireCurrentUser(`/community/${slug}/edit`)]);
 
   if (!post) {
@@ -30,6 +33,11 @@ export default async function EditCommunityPostPage({
           글로 돌아가기
         </Link>
       </section>
+      {saved === "1" ? (
+        <div className="section-shell save-toast" role="status">
+          수정 완료됐습니다.
+        </div>
+      ) : null}
       <CommunityForm post={post} />
     </main>
   );

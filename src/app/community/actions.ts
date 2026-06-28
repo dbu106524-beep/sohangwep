@@ -50,18 +50,31 @@ function assertCommunityWriter(user: CurrentUser) {
   }
 }
 
-async function resolveCommunityImageUrl(formData: FormData, fallback: string | null = null) {
-  const imageFile = formData.get("image_file");
-
-  if (!(imageFile instanceof File) || imageFile.size === 0) {
+function parseImageList(value: FormDataEntryValue | null, fallback: string[] = []) {
+  if (typeof value !== "string" || !value.trim()) {
     return fallback;
   }
 
-  if (!allowedImageTypes.has(imageFile.type)) {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string" && Boolean(item.trim())).slice(0, 5) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function getImageFiles(formData: FormData) {
+  return [...formData.getAll("image_files"), ...formData.getAll("image_file")]
+    .filter((file): file is File => file instanceof File && file.size > 0)
+    .slice(0, 5);
+}
+
+async function uploadCommunityImage(file: File) {
+  if (!allowedImageTypes.has(file.type)) {
     throw new Error("이미지는 PNG, JPG, WEBP, GIF 파일만 업로드할 수 있습니다.");
   }
 
-  if (imageFile.size > 6 * 1024 * 1024) {
+  if (file.size > 6 * 1024 * 1024) {
     throw new Error("이미지는 6MB 이하만 업로드할 수 있습니다.");
   }
 
@@ -69,10 +82,10 @@ async function resolveCommunityImageUrl(formData: FormData, fallback: string | n
   const bucket = "community-images";
   await supabase.storage.createBucket(bucket, { public: true }).catch(() => null);
 
-  const extension = imageFile.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
+  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
   const path = `posts/${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from(bucket).upload(path, imageFile, {
-    contentType: imageFile.type,
+  const { error } = await supabase.storage.from(bucket).upload(path, file, {
+    contentType: file.type,
     upsert: false,
   });
 
@@ -82,6 +95,20 @@ async function resolveCommunityImageUrl(formData: FormData, fallback: string | n
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+async function resolveCommunityImageUrls(formData: FormData, fallback: string[] = []) {
+  const files = getImageFiles(formData);
+
+  if (files.length === 0) {
+    return fallback.slice(0, 5);
+  }
+
+  const uploaded = [];
+  for (const file of files) {
+    uploaded.push(await uploadCommunityImage(file));
+  }
+  return uploaded;
 }
 
 function revalidateCommunity(slug?: string) {
@@ -107,7 +134,7 @@ export async function createCommunityPostAction(formData: FormData) {
   const submissionId = getSubmissionId(formData) || crypto.randomUUID().slice(0, 12);
   const slugBase = slugify(title) || "post";
   const slug = `${slugBase}-${submissionId}`;
-  const imageUrl = await resolveCommunityImageUrl(formData);
+  const imageUrls = await resolveCommunityImageUrls(formData);
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("community_posts").insert({
     author_id: user.id,
@@ -117,7 +144,8 @@ export async function createCommunityPostAction(formData: FormData) {
     slug,
     content,
     category,
-    image_url: imageUrl,
+    image_url: imageUrls[0] ?? null,
+    image_urls: imageUrls,
   });
 
   if (error) {
@@ -141,7 +169,10 @@ export async function updateCommunityPostAction(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   const currentSlug = String(formData.get("slug") ?? "");
-  const currentImageUrl = String(formData.get("current_image_url") ?? "").trim() || null;
+  const currentImages = parseImageList(
+    formData.get("current_image_urls"),
+    [String(formData.get("current_image_url") ?? "").trim()].filter(Boolean),
+  );
   const post = await getCommunityPost(currentSlug);
 
   if (!post || (post.author_id !== user.id && !user.isAdmin)) {
@@ -151,7 +182,7 @@ export async function updateCommunityPostAction(formData: FormData) {
   const title = getRequiredText(formData, "title", "제목");
   const category = getCategory(formData.get("category"));
   const content = getRequiredText(formData, "content", "내용");
-  const imageUrl = await resolveCommunityImageUrl(formData, currentImageUrl);
+  const imageUrls = await resolveCommunityImageUrls(formData, currentImages);
   const supabase = user.isAdmin ? await createSupabaseServiceClient() : await createSupabaseServerClient();
   const { error } = await supabase
     .from("community_posts")
@@ -159,7 +190,8 @@ export async function updateCommunityPostAction(formData: FormData) {
       title,
       content,
       category,
-      image_url: imageUrl,
+      image_url: imageUrls[0] ?? null,
+      image_urls: imageUrls,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -169,7 +201,7 @@ export async function updateCommunityPostAction(formData: FormData) {
   }
 
   revalidateCommunity(currentSlug);
-  redirect(`/community/${encodeURIComponent(currentSlug)}`);
+  redirect(`/community/${encodeURIComponent(currentSlug)}/edit?saved=1`);
 }
 
 export async function deleteCommunityPostAction(formData: FormData) {

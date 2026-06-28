@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useFormStatus } from "react-dom";
 import { createCommunityPostAction, updateCommunityPostAction } from "@/app/community/actions";
 import type { CommunityPost } from "@/lib/types";
+import { getImageUrls } from "@/lib/utils";
 
 const categoryOptions = [
   { value: "screenshot", label: "스크린샷" },
@@ -24,6 +25,7 @@ function SubmitButton({ editing }: { editing: boolean }) {
 export function CommunityForm({ post }: { post?: CommunityPost }) {
   const action = post ? updateCommunityPostAction : createCommunityPostAction;
   const submissionId = useMemo(() => crypto.randomUUID().slice(0, 12), []);
+  const imageUrls = post ? getImageUrls(post) : [];
 
   return (
     <form action={action} className="admin-panel community-form">
@@ -34,6 +36,7 @@ export function CommunityForm({ post }: { post?: CommunityPost }) {
           <input type="hidden" name="id" value={post.id} />
           <input type="hidden" name="slug" value={post.slug} />
           <input type="hidden" name="current_image_url" value={post.image_url ?? ""} />
+          <input type="hidden" name="current_image_urls" value={JSON.stringify(imageUrls)} />
         </>
       ) : null}
 
@@ -55,13 +58,15 @@ export function CommunityForm({ post }: { post?: CommunityPost }) {
 
       <label className="admin-field">
         <span>이미지</span>
-        <input name="image_file" className="admin-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-        <small className="field-help">PNG, JPG, WEBP, GIF / 최대 6MB. 스크린샷 게시판은 이미지가 있을 때 가장 예쁘게 표시됩니다.</small>
+        <input name="image_files" className="admin-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+        <small className="field-help">PNG, JPG, WEBP, GIF / 최대 5장, 장당 6MB. 새 이미지를 선택하면 기존 이미지를 대체합니다.</small>
       </label>
 
-      {post?.image_url ? (
-        <div className="community-current-image">
-          <img src={post.image_url} alt="" />
+      {imageUrls.length ? (
+        <div className="admin-image-grid">
+          {imageUrls.map((url) => (
+            <img key={url} src={url} alt="" />
+          ))}
         </div>
       ) : null}
 

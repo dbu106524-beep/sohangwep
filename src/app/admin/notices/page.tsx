@@ -40,7 +40,8 @@ export default async function AdminNoticesPage() {
           <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" />
           <label className="admin-field">
             <span>이미지 파일 업로드</span>
-            <input className="file-input" name="image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            <input className="file-input" name="image_files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+            <small className="field-help">최대 5장까지 업로드할 수 있습니다.</small>
           </label>
           <label className="checkbox-row">
             <input name="published" type="checkbox" defaultChecked /> 공개

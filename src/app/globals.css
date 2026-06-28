@@ -82,6 +82,66 @@ body::before {
   background: rgba(0, 0, 0, 0.2);
 }
 
+.article-image-gallery,
+.admin-image-grid,
+.product-image-gallery {
+  display: grid;
+  gap: 10px;
+}
+
+.article-image-gallery {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 24px 0 28px;
+}
+
+.article-image-gallery img,
+.admin-image-grid img,
+.product-image-gallery img {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.article-image-gallery img {
+  aspect-ratio: 16 / 10;
+}
+
+.admin-image-grid {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  margin: 0 0 14px;
+}
+
+.admin-image-grid img {
+  aspect-ratio: 1;
+}
+
+.product-image-gallery {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 14px;
+}
+
+.product-image-gallery img {
+  aspect-ratio: 1;
+}
+
+.save-toast {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(118, 225, 212, 0.42);
+  border-radius: var(--radius);
+  background: rgba(118, 225, 212, 0.12);
+  color: #ffffff;
+  font-weight: 950;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+}
+
+.split-wide {
+  grid-column: 1 / -1;
+}
+
 .post-card-image {
   aspect-ratio: 16 / 9;
   margin: -4px -4px 16px;

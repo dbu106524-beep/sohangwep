@@ -2,8 +2,14 @@ import { createProductAction, deleteProductAction, updateProductAction } from "@
 import { requireAdmin } from "@/lib/auth";
 import { getProducts } from "@/lib/data";
 import type { Product } from "@/lib/types";
+import { getImageUrls } from "@/lib/utils";
 
-export default async function AdminProductsPage() {
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
+  const { saved } = await searchParams;
   const { allowed } = await requireAdmin("/admin/products");
   const products = await getProducts({ includeInactive: true });
 
@@ -28,6 +34,11 @@ export default async function AdminProductsPage() {
       </section>
 
       <section className="split-section">
+        {saved === "1" ? (
+          <div className="save-toast split-wide" role="status">
+            수정 완료됐습니다.
+          </div>
+        ) : null}
         <ProductForm action={createProductAction} title="새 상품 등록" submitLabel="등록" />
         <div className="admin-list">
           {products.length ? (
@@ -66,10 +77,13 @@ function ProductForm({
   submitLabel: string;
   values?: Product;
 }) {
+  const imageUrls = values ? getImageUrls(values) : [];
+
   return (
     <form action={action} className="glass-card">
       {values ? <input type="hidden" name="id" value={values.id} /> : null}
       {values?.image_url ? <input type="hidden" name="current_image_url" value={values.image_url} /> : null}
+      {values ? <input type="hidden" name="current_image_urls" value={JSON.stringify(imageUrls)} /> : null}
       <h2>{title}</h2>
       <AdminInput name="name" label="상품명" defaultValue={values?.name} required />
       <AdminInput name="description" label="짧은 설명" defaultValue={values?.description} required />
@@ -82,8 +96,16 @@ function ProductForm({
       <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={values?.image_url ?? ""} />
       <label className="admin-field">
         <span>이미지 파일 업로드</span>
-        <input className="file-input" name="image_file" type="file" accept="image/*" />
+        <input className="file-input" name="image_files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+        <small className="field-help">최대 5장까지 업로드할 수 있습니다. 새 이미지를 선택하면 기존 이미지를 대체합니다.</small>
       </label>
+      {imageUrls.length ? (
+        <div className="admin-image-grid">
+          {imageUrls.map((url) => (
+            <img key={url} src={url} alt="" />
+          ))}
+        </div>
+      ) : null}
       <label className="checkbox-row">
         <input name="active" type="checkbox" defaultChecked={values?.active ?? true} /> 판매중
       </label>

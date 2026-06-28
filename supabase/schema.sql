@@ -46,11 +46,13 @@ create table if not exists public.notices (
   content text not null,
   category text not null default 'notice' check (category in ('notice', 'update', 'event')),
   image_url text,
+  image_urls text[] not null default '{}',
   published boolean not null default false,
   created_at timestamptz not null default now()
 );
 
 alter table public.notices add column if not exists image_url text;
+alter table public.notices add column if not exists image_urls text[] not null default '{}';
 
 create table if not exists public.guides (
   id uuid primary key default gen_random_uuid(),
@@ -70,10 +72,13 @@ create table if not exists public.products (
   price_krw integer not null check (price_krw >= 0),
   cash_amount integer not null default 0 check (cash_amount >= 0),
   image_url text,
+  image_urls text[] not null default '{}',
   minecraft_item_key text not null,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+alter table public.products add column if not exists image_urls text[] not null default '{}';
 
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
@@ -97,6 +102,7 @@ create table if not exists public.community_posts (
   content text not null,
   category text not null default 'free' check (category in ('screenshot', 'free', 'tips')),
   image_url text,
+  image_urls text[] not null default '{}',
   view_count integer not null default 0 check (view_count >= 0),
   featured boolean not null default false,
   featured_at timestamptz,
@@ -107,6 +113,7 @@ create table if not exists public.community_posts (
 alter table public.community_posts add column if not exists view_count integer not null default 0 check (view_count >= 0);
 alter table public.community_posts add column if not exists featured boolean not null default false;
 alter table public.community_posts add column if not exists featured_at timestamptz;
+alter table public.community_posts add column if not exists image_urls text[] not null default '{}';
 
 create table if not exists public.community_post_views (
   post_id uuid not null references public.community_posts(id) on delete cascade,

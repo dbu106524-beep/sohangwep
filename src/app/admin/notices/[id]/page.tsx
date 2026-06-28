@@ -5,10 +5,17 @@ import { requireAdmin } from "@/lib/auth";
 import { getNotices } from "@/lib/data";
 import { noticeTypeLabels } from "@/lib/site-content";
 import type { Notice } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getImageUrls } from "@/lib/utils";
 
-export default async function AdminNoticeEditPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminNoticeEditPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
+}) {
   const { id } = await params;
+  const { saved } = await searchParams;
   const { allowed } = await requireAdmin(`/admin/notices/${id}`);
   const notices = await getNotices({ includeDrafts: true });
   const notice = notices.find((item) => item.id === id);
@@ -28,6 +35,7 @@ export default async function AdminNoticeEditPage({ params }: { params: Promise<
   if (!notice) {
     notFound();
   }
+  const imageUrls = getImageUrls(notice);
 
   return (
     <main>
@@ -41,6 +49,11 @@ export default async function AdminNoticeEditPage({ params }: { params: Promise<
       </section>
 
       <section className="section-shell glass-card admin-edit-panel">
+        {saved === "1" ? (
+          <div className="save-toast" role="status">
+            수정 완료됐습니다.
+          </div>
+        ) : null}
         <div className="post-topline">
           <span className="badge">{noticeTypeLabels[notice.category]}</span>
           <span>{notice.published ? "공개" : "비공개"}</span>
@@ -51,6 +64,7 @@ export default async function AdminNoticeEditPage({ params }: { params: Promise<
           <input type="hidden" name="id" value={notice.id} />
           <input type="hidden" name="current_slug" value={notice.slug} />
           {notice.image_url ? <input type="hidden" name="current_image_url" value={notice.image_url} /> : null}
+          <input type="hidden" name="current_image_urls" value={JSON.stringify(imageUrls)} />
           <AdminInput name="title" label="제목" defaultValue={notice.title} required />
           <AdminInput name="excerpt" label="요약" defaultValue={notice.excerpt} required />
           <AdminTextarea name="content" label="본문" defaultValue={notice.content} required />
@@ -58,11 +72,14 @@ export default async function AdminNoticeEditPage({ params }: { params: Promise<
           <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={notice.image_url ?? ""} />
           <label className="admin-field">
             <span>이미지 파일 업로드</span>
-            <input className="file-input" name="image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            <input className="file-input" name="image_files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
+            <small className="field-help">최대 5장까지 업로드할 수 있습니다. 새 이미지를 선택하면 기존 이미지를 대체합니다.</small>
           </label>
-          {notice.image_url ? (
-            <div className="admin-preview-image">
-              <img src={notice.image_url} alt="" />
+          {imageUrls.length ? (
+            <div className="admin-image-grid">
+              {imageUrls.map((url) => (
+                <img key={url} src={url} alt="" />
+              ))}
             </div>
           ) : null}
           <label className="checkbox-row">

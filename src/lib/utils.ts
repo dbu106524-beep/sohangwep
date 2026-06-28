@@ -36,3 +36,8 @@ export function slugify(input: string) {
 export function getSiteUrl() {
   return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 }
+
+export function getImageUrls(item: { image_url?: string | null; image_urls?: string[] | null }) {
+  const urls = [...(item.image_urls ?? []), item.image_url].filter((url): url is string => Boolean(url));
+  return Array.from(new Set(urls)).slice(0, 5);
+}
