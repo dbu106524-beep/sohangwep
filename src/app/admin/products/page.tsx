@@ -97,10 +97,12 @@ function ProductForm({
         <small className="field-help">굿즈는 배송 정보 입력을 받고, 스타 크레딧 지급량과 마인크래프트 지급 키를 사용하지 않습니다.</small>
       </label>
       <div className="admin-grid">
+        <AdminInput name="sort_order" label="표시 순서" type="number" defaultValue={String(values?.sort_order ?? 0)} required />
         <AdminInput name="price_krw" label="가격" type="number" min="0" defaultValue={String(values?.price_krw ?? "")} required />
         <AdminInput name="discount_percent" label="할인율 (%)" type="number" min="0" max="100" defaultValue={String(values?.discount_percent ?? 0)} required />
         <AdminInput name="cash_amount" label="스타 크레딧 지급량" type="number" defaultValue={String(values?.cash_amount ?? "")} required />
       </div>
+      <p className="field-help">표시 순서는 숫자가 낮을수록 상점에서 먼저 보입니다. 예: 1, 2, 3</p>
       <AdminInput name="minecraft_item_key" label="마인크래프트 지급 키" defaultValue={values?.minecraft_item_key ?? ""} />
       <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={values?.image_url ?? ""} />
       <label className="admin-field">

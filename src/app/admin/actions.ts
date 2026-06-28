@@ -119,6 +119,11 @@ function getDiscountPercent(formData: FormData) {
   return Math.min(100, Math.max(0, Math.round(value)));
 }
 
+function getSortOrder(formData: FormData) {
+  const value = Number(formData.get("sort_order") ?? 0);
+  return Number.isFinite(value) ? Math.round(value) : 0;
+}
+
 async function sendNoticeDiscordNotification(
   notice: Pick<Notice, "id" | "title" | "slug" | "excerpt" | "image_url" | "category">,
 ) {
@@ -275,6 +280,7 @@ export async function createProductAction(formData: FormData) {
     image_url: imageUrls[0] ?? null,
     image_urls: imageUrls,
     minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
+    sort_order: getSortOrder(formData),
     active: formData.get("active") === "on",
   });
   revalidatePath("/shop");
@@ -312,6 +318,7 @@ export async function updateProductAction(formData: FormData) {
       image_url: imageUrls[0] ?? null,
       image_urls: imageUrls,
       minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
+      sort_order: getSortOrder(formData),
       active: formData.get("active") === "on",
     })
     .eq("id", id);

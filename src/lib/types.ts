@@ -60,6 +60,7 @@ export type Product = {
   image_url: string | null;
   image_urls?: string[] | null;
   minecraft_item_key: string | null;
+  sort_order: number;
   active: boolean;
   created_at: string;
 };

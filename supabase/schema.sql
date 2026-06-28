@@ -76,6 +76,7 @@ create table if not exists public.products (
   image_url text,
   image_urls text[] not null default '{}',
   minecraft_item_key text,
+  sort_order integer not null default 0,
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -83,6 +84,7 @@ create table if not exists public.products (
 alter table public.products add column if not exists image_urls text[] not null default '{}';
 alter table public.products add column if not exists product_kind text not null default 'credit';
 alter table public.products add column if not exists discount_percent integer not null default 0;
+alter table public.products add column if not exists sort_order integer not null default 0;
 alter table public.products alter column minecraft_item_key drop not null;
 alter table public.products drop constraint if exists products_product_kind_check;
 alter table public.products add constraint products_product_kind_check check (product_kind in ('credit', 'goods'));
@@ -172,7 +174,7 @@ create table if not exists public.cash_ledger (
 );
 
 create index if not exists notices_published_created_idx on public.notices (published, created_at desc);
-create index if not exists products_active_created_idx on public.products (active, created_at desc);
+create index if not exists products_active_sort_created_idx on public.products (active, sort_order asc, created_at desc);
 create index if not exists purchases_user_created_idx on public.purchases (user_id, created_at desc);
 create index if not exists profiles_discord_id_idx on public.profiles (discord_id);
 create index if not exists community_posts_category_created_idx on public.community_posts (category, created_at desc);

@@ -91,7 +91,11 @@ export async function getProducts(options: { includeInactive?: boolean } = {}): 
   }
 
   const supabase = options.includeInactive ? await createSupabaseServiceClient() : await createSupabaseServerClient();
-  let query = supabase.from("products").select("*").order("created_at", { ascending: false });
+  let query = supabase
+    .from("products")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
 
   if (!options.includeInactive) {
     query = query.eq("active", true);
