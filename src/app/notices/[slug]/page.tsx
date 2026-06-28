@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { getCurrentUser } from "@/lib/auth";
 import { getNotice } from "@/lib/data";
 import { noticeTypeLabels } from "@/lib/site-content";
@@ -31,13 +32,7 @@ export default async function NoticeDetailPage({ params }: { params: Promise<{ s
         ) : null}
         <h1>{notice.title}</h1>
         <p className="lead">{notice.excerpt}</p>
-        {imageUrls.length ? (
-          <div className="article-image-gallery">
-            {imageUrls.map((url) => (
-              <img key={url} src={url} alt="" />
-            ))}
-          </div>
-        ) : null}
+        {imageUrls.length ? <ImageLightbox images={imageUrls} alt={notice.title} /> : null}
         <div className="article-body">
           {notice.content.split(/\n{2,}/).map((block) => (
             <p key={block}>{block}</p>

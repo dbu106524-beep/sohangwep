@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { PurchaseButton } from "@/components/purchase-button";
 import { getProduct } from "@/lib/data";
 import { formatWon, getDiscountedPrice, getImageUrls, normalizeDiscountPercent } from "@/lib/utils";
@@ -24,15 +25,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </section>
       <section className="split-section">
         <div className="product-card">
-          <div className={imageUrls.length > 1 ? "product-image-gallery" : "product-image"}>
-            {imageUrls.length ? (
-              imageUrls.map((url) => <img key={url} src={url} alt={product.name} />)
-            ) : (
+          {imageUrls.length ? (
+            <ImageLightbox images={imageUrls} alt={product.name} className={imageUrls.length > 1 ? "product-image-gallery" : "product-image"} />
+          ) : (
+            <div className="product-image">
               <div className="product-placeholder" aria-hidden="true">
                 <span>IMG</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <div className="glass-card">
           <span className="badge">

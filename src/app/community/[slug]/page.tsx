@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { deleteCommunityPostAction } from "@/app/community/actions";
 import { AuthorLine, canManageCommunityPost, communityCategoryLabels } from "@/components/community-cards";
 import { CommunityPostInteractions } from "@/components/community-post-interactions";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { getCurrentUser } from "@/lib/auth";
 import { getCommunityComments, getCommunityPost } from "@/lib/data";
 import { formatDate, getImageUrls } from "@/lib/utils";
@@ -41,13 +42,7 @@ export default async function CommunityPostPage({
         <h1>{post.title}</h1>
         <AuthorLine post={post} />
 
-        {imageUrls.length ? (
-          <div className="article-image-gallery community-image-gallery">
-            {imageUrls.map((url) => (
-              <img key={url} src={url} alt={post.title} />
-            ))}
-          </div>
-        ) : null}
+        {imageUrls.length ? <ImageLightbox images={imageUrls} alt={post.title} className="article-image-gallery community-image-gallery" /> : null}
 
         <div className="article-body">
           {post.content.split("\n").map((line, index) => (
