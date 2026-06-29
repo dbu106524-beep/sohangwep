@@ -4,21 +4,104 @@ import { useState } from "react";
 
 type ProductKind = "credit" | "goods";
 
+type DaumPostcodeData = {
+  zonecode: string;
+  address: string;
+  roadAddress: string;
+  jibunAddress: string;
+  bname: string;
+  buildingName: string;
+  apartment: string;
+};
+
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: { oncomplete: (data: DaumPostcodeData) => void }) => { open: () => void };
+    };
+  }
+}
+
+const postcodeScriptId = "daum-postcode-script";
+
 export function PurchaseButton({ productId, productKind = "credit" }: { productId: string; productKind?: ProductKind }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [shippingRecipient, setShippingRecipient] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
-  const [shippingAddress, setShippingAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [shippingBaseAddress, setShippingBaseAddress] = useState("");
+  const [shippingDetailAddress, setShippingDetailAddress] = useState("");
   const [shippingMessage, setShippingMessage] = useState("");
 
   const isGoods = productKind === "goods";
 
+  function showError(message: string) {
+    setPending(false);
+    setError(message);
+    setShowErrorPopup(true);
+  }
+
+  function openAddressSearch() {
+    const openPostcode = () => {
+      if (!window.daum?.Postcode) {
+        showError("주소 검색을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+
+      new window.daum.Postcode({
+        oncomplete(data) {
+          const baseAddress = data.roadAddress || data.address || data.jibunAddress;
+          const extras = [];
+
+          if (data.roadAddress) {
+            if (data.bname) extras.push(data.bname);
+            if (data.buildingName && data.apartment === "Y") extras.push(data.buildingName);
+          }
+
+          setPostalCode(data.zonecode);
+          setShippingBaseAddress(`${baseAddress}${extras.length ? ` (${extras.join(", ")})` : ""}`);
+          setShippingDetailAddress("");
+        },
+      }).open();
+    };
+
+    if (window.daum?.Postcode) {
+      openPostcode();
+      return;
+    }
+
+    const existingScript = document.getElementById(postcodeScriptId) as HTMLScriptElement | null;
+    if (existingScript) {
+      existingScript.addEventListener("load", openPostcode, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = postcodeScriptId;
+    script.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+    script.async = true;
+    script.onload = openPostcode;
+    script.onerror = () => showError("주소 검색 스크립트를 불러오지 못했습니다.");
+    document.body.appendChild(script);
+  }
+
   async function checkout() {
-    setPending(true);
     setError(null);
     setShowErrorPopup(false);
+
+    const fullShippingAddress = [`[${postalCode}]`, shippingBaseAddress, shippingDetailAddress]
+      .filter((part) => part.replace(/\[\]/g, "").trim())
+      .join(" ")
+      .trim();
+
+    if (isGoods && (!shippingRecipient.trim() || !shippingPhone.trim() || !shippingBaseAddress.trim() || !shippingDetailAddress.trim())) {
+      showError("굿즈 주문은 받는 사람, 연락처, 주소 검색, 상세주소가 필요합니다.");
+      return;
+    }
+
+    setPending(true);
 
     const response = await fetch("/api/payments/checkout", {
       method: "POST",
@@ -27,7 +110,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
         productId,
         shippingRecipient,
         shippingPhone,
-        shippingAddress,
+        shippingAddress: fullShippingAddress,
         shippingMessage,
       }),
     });
@@ -36,8 +119,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
     setPending(false);
 
     if (!response.ok || !data.redirectUrl) {
-      setError(data.error ?? "결제 준비 중 문제가 발생했어요.");
-      setShowErrorPopup(true);
+      showError(data.error ?? "결제 준비 중 문제가 발생했어요.");
       return;
     }
 
@@ -58,7 +140,17 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
           </label>
           <label>
             <span>배송지 주소</span>
-            <input value={shippingAddress} onChange={(event) => setShippingAddress(event.target.value)} placeholder="주소를 입력해 주세요" />
+            <div className="address-search-row">
+              <input value={postalCode} readOnly placeholder="우편번호" />
+              <button type="button" className="button ghost" onClick={openAddressSearch}>
+                주소 검색
+              </button>
+            </div>
+            <input value={shippingBaseAddress} readOnly placeholder="주소 검색 버튼을 눌러 주세요" />
+          </label>
+          <label>
+            <span>상세주소</span>
+            <input value={shippingDetailAddress} onChange={(event) => setShippingDetailAddress(event.target.value)} placeholder="동, 호수 등 상세주소" />
           </label>
           <label>
             <span>배송메시지</span>

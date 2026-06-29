@@ -23,8 +23,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <h1>{product.name}</h1>
         <p>{product.description}</p>
       </section>
-      <section className="split-section">
-        <div className="product-card">
+      <section className="split-section product-detail-section">
+        <div className="product-card product-detail-media">
           {imageUrls.length ? (
             <ImageLightbox images={imageUrls} alt={product.name} className={imageUrls.length > 1 ? "product-image-gallery" : "product-image"} />
           ) : (

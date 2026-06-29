@@ -490,6 +490,15 @@ time { color: var(--muted); font-size: 12px; }
   align-items: start;
 }
 
+.product-detail-section {
+  grid-template-columns: minmax(0, 1.35fr) minmax(430px, 0.85fr);
+  gap: 26px;
+}
+
+.product-detail-media {
+  min-height: 620px;
+}
+
 .glass-card h2 { margin: 8px 0 12px; font-size: 32px; }
 .glass-card p { color: var(--muted); line-height: 1.75; }
 .supply-card { display: grid; gap: 14px; }
@@ -696,6 +705,18 @@ time { color: var(--muted); font-size: 12px; }
   object-fit: cover;
 }
 
+.product-detail-media .product-image {
+  min-height: 620px;
+  aspect-ratio: 1 / 1;
+  border-bottom: 0;
+}
+
+.product-detail-media .product-image img,
+.product-detail-media .product-image .lightbox-trigger img {
+  object-fit: contain;
+  padding: 18px;
+}
+
 .product-placeholder {
   height: 100%;
   display: grid;
@@ -787,6 +808,17 @@ time { color: var(--muted); font-size: 12px; }
   padding: 12px 13px;
   color: var(--text);
   background: rgba(10, 12, 28, 0.68);
+}
+
+.address-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.address-search-row .button {
+  min-height: 46px;
+  white-space: nowrap;
 }
 
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1280,6 +1312,15 @@ body[data-page="home"] .site-footer {
 
   .shop-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .product-detail-section {
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail-media,
+  .product-detail-media .product-image {
+    min-height: 460px;
   }
   .guide-sidebar,
   .admin-sidebar { position: static; }
