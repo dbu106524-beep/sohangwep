@@ -40,6 +40,11 @@ export default async function AdminPage() {
           <h2>{products.length}</h2>
           <p>상점 상품 등록/수정</p>
         </Link>
+        <Link href="/admin/legal" className="glass-card">
+          <span className="eyebrow">POLICY</span>
+          <h2>3</h2>
+          <p>이용약관, 개인정보처리방침, 환불정책 수정</p>
+        </Link>
         <div className="glass-card">
           <span className="eyebrow">PAYMENT</span>
           <h2>{process.env.PAYMENT_MODE ?? "test"}</h2>

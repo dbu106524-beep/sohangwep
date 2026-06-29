@@ -1,7 +1,8 @@
 import { guides, purchases } from "@/lib/mock-data";
+import { defaultLegalPages } from "@/lib/legal-content";
 import { fallbackNotices, fallbackProducts, sortNotices } from "@/lib/site-content";
 import { createSupabaseServerClient, createSupabaseServiceClient, hasSupabaseEnv } from "@/lib/supabase/server";
-import type { CommunityCategory, CommunityComment, CommunityPost, Guide, Notice, Product, Purchase } from "@/lib/types";
+import type { CommunityCategory, CommunityComment, CommunityPost, Guide, LegalPage, LegalPageSlug, Notice, Product, Purchase } from "@/lib/types";
 
 function logSupabaseFallback(scope: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -83,6 +84,41 @@ export async function getGuides(): Promise<Guide[]> {
   }
 
   return data ?? [];
+}
+
+export async function getLegalPages(): Promise<LegalPage[]> {
+  if (!hasSupabaseEnv()) {
+    return Object.values(defaultLegalPages);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("legal_pages").select("*");
+
+  if (error) {
+    logSupabaseFallback("getLegalPages", error.message);
+    return Object.values(defaultLegalPages);
+  }
+
+  return Object.values(defaultLegalPages).map((fallback) => {
+    const saved = data?.find((page) => page.slug === fallback.slug);
+    return saved ?? fallback;
+  });
+}
+
+export async function getLegalPage(slug: LegalPageSlug): Promise<LegalPage> {
+  if (!hasSupabaseEnv()) {
+    return defaultLegalPages[slug];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from("legal_pages").select("*").eq("slug", slug).maybeSingle();
+
+  if (error) {
+    logSupabaseFallback("getLegalPage", error.message);
+    return defaultLegalPages[slug];
+  }
+
+  return data ?? defaultLegalPages[slug];
 }
 
 export async function getProducts(options: { includeInactive?: boolean } = {}): Promise<Product[]> {

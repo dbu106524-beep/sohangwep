@@ -47,6 +47,16 @@ export type Guide = {
   icon: string;
 };
 
+export type LegalPageSlug = "service" | "privacy" | "refund";
+
+export type LegalPage = {
+  slug: LegalPageSlug;
+  title: string;
+  description: string;
+  content: string;
+  updated_at: string;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -152,6 +162,12 @@ export type Database = {
         Row: Guide;
         Insert: Guide;
         Update: Partial<Guide>;
+        Relationships: [];
+      };
+      legal_pages: {
+        Row: LegalPage;
+        Insert: LegalPage;
+        Update: Partial<LegalPage>;
         Relationships: [];
       };
       products: {

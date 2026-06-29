@@ -63,6 +63,14 @@ create table if not exists public.guides (
   icon text not null default '✨'
 );
 
+create table if not exists public.legal_pages (
+  slug text primary key check (slug in ('service', 'privacy', 'refund')),
+  title text not null,
+  description text not null,
+  content text not null,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -189,6 +197,7 @@ alter table public.profiles enable row level security;
 alter table public.minecraft_links enable row level security;
 alter table public.notices enable row level security;
 alter table public.guides enable row level security;
+alter table public.legal_pages enable row level security;
 alter table public.products enable row level security;
 alter table public.purchases enable row level security;
 alter table public.community_posts enable row level security;
@@ -328,6 +337,54 @@ create policy "admin_write_guides"
 on public.guides for all
 using (private.is_admin())
 with check (private.is_admin());
+
+drop policy if exists "public_read_legal_pages" on public.legal_pages;
+create policy "public_read_legal_pages"
+on public.legal_pages for select
+using (true);
+
+drop policy if exists "admin_write_legal_pages" on public.legal_pages;
+create policy "admin_write_legal_pages"
+on public.legal_pages for all
+using (private.is_admin())
+with check (private.is_admin());
+
+insert into public.legal_pages (slug, title, description, content)
+values
+  ('service', '이용약관', '소행성 공식 홈페이지와 상점 이용에 필요한 기본 약관입니다.', '서비스 목적
+소행성 홈페이지는 서버 공지, 업데이트, 커뮤니티, 상점, 구매 내역 확인 기능을 제공합니다.
+
+계정과 인증
+Discord OAuth 로그인으로 계정을 연결하며, 부정 이용 또는 타인 계정 사용은 제한될 수 있습니다.
+
+상점 이용
+테스트 모드에서는 실제 결제가 발생하지 않습니다. 정식 결제 연동 후 상품 지급은 결제 성공 확인 후 처리됩니다.
+
+운영 제한
+서버 운영 정책을 위반하거나 시스템을 악용하는 행위는 이용 제한 또는 구매 취소 사유가 될 수 있습니다.'),
+  ('privacy', '개인정보처리방침', 'Discord OAuth와 상점 이용 과정에서 처리되는 정보를 안내합니다.', '수집 항목
+Discord ID, 표시 이름, 아바타 URL, 마인크래프트 UUID와 닉네임, 구매 내역, 스타 크레딧 잔액을 처리할 수 있습니다.
+
+이용 목적
+로그인, 관리자 권한 확인, 커뮤니티 작성 권한 확인, 결제 내역 관리, 아이템 지급 요청, 고객 문의 처리를 위해 사용합니다.
+
+보관 기간
+서비스 운영과 분쟁 대응에 필요한 기간 동안 보관하며, 법령 또는 운영 정책에 따라 삭제할 수 있습니다.
+
+제3자 제공
+정식 결제 연동 후 결제 처리를 위해 PG사에 필요한 최소 정보가 전달될 수 있습니다.'),
+  ('refund', '환불정책', '상점 상품의 환불 기준과 문의 흐름을 안내합니다.', '테스트 모드
+현재 테스트 모드에서는 실제 결제가 발생하지 않으므로 환불 처리 대상 금액이 없습니다.
+
+정식 결제 후
+상품이 아직 지급되지 않은 경우 결제 취소 또는 환불이 가능하도록 운영 정책을 적용합니다.
+
+지급 완료 상품
+서버 재화 또는 아이템이 사용된 경우 환불이 제한될 수 있습니다.
+
+문의 방법
+디스코드 문의 채널로 주문번호, Discord ID, 마인크래프트 닉네임을 함께 제출해 주세요.')
+on conflict (slug) do nothing;
 
 drop policy if exists "public_read_active_products" on public.products;
 create policy "public_read_active_products"

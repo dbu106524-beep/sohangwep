@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServiceClient, hasSupabaseEnv } from "@/lib/supabase/server";
 import { noticeTypeLabels } from "@/lib/site-content";
-import type { Notice } from "@/lib/types";
+import type { LegalPageSlug, Notice } from "@/lib/types";
 import { getSiteUrl, slugify } from "@/lib/utils";
 
 async function assertAdmin() {
@@ -122,6 +122,15 @@ function getDiscountPercent(formData: FormData) {
 function getSortOrder(formData: FormData) {
   const value = Number(formData.get("sort_order") ?? 0);
   return Number.isFinite(value) ? Math.round(value) : 0;
+}
+
+function getLegalSlug(formData: FormData): LegalPageSlug {
+  const slug = String(formData.get("slug") ?? "");
+  if (slug === "privacy" || slug === "refund") {
+    return slug;
+  }
+
+  return "service";
 }
 
 async function sendNoticeDiscordNotification(
@@ -259,6 +268,43 @@ export async function deleteNoticeAction(formData: FormData) {
   await supabase.from("notices").delete().eq("id", id);
   revalidatePath("/notices");
   revalidatePath("/admin/notices");
+}
+
+export async function updateLegalPageAction(formData: FormData) {
+  await assertAdmin();
+
+  const slug = getLegalSlug(formData);
+
+  if (!hasSupabaseEnv()) {
+    revalidatePath("/admin/legal");
+    revalidatePath(`/terms/${slug}`);
+    return;
+  }
+
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const content = String(formData.get("content") ?? "").trim();
+
+  if (!title || !description || !content) {
+    throw new Error("제목, 설명, 본문을 모두 입력해 주세요.");
+  }
+
+  const supabase = await createSupabaseServiceClient();
+  const { error } = await supabase.from("legal_pages").upsert({
+    slug,
+    title,
+    description,
+    content,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    throw new Error(`정책 문서 저장에 실패했습니다: ${error.message}`);
+  }
+
+  revalidatePath("/admin/legal");
+  revalidatePath(`/terms/${slug}`);
+  redirect("/admin/legal?saved=1");
 }
 
 export async function createProductAction(formData: FormData) {

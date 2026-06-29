@@ -810,6 +810,21 @@ body.lightbox-open {
   margin-top: 14px;
 }
 
+.admin-legal-list {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-legal-form {
+  display: grid;
+  gap: 10px;
+}
+
+.policy-editor-textarea {
+  min-height: 320px;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 1280px) {
   .screenshot-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
