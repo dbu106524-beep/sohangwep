@@ -86,10 +86,17 @@ export type Purchase = {
   shipping_phone: string | null;
   shipping_address: string | null;
   shipping_message: string | null;
-  status: "pending" | "paid" | "fulfilled" | "failed" | "refunded";
+  tracking_carrier: string | null;
+  tracking_number: string | null;
+  shipped_at: string | null;
+  status: "pending" | "paid" | "fulfilled" | "failed" | "refunded" | "shipped";
   payment_provider: "test" | "ready";
   payment_reference: string | null;
   created_at: string;
+};
+
+export type AdminPurchase = Purchase & {
+  profile?: Pick<Profile, "display_name" | "discord_id" | "minecraft_account_name" | "minecraft_name" | "avatar_url"> | null;
 };
 
 export type CommunityCategory = "screenshot" | "free" | "tips";

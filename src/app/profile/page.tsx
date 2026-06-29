@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PageHero } from "@/components/page-hero";
 import { requireCurrentUser } from "@/lib/auth";
 import { getPurchases } from "@/lib/data";
+import { purchaseStatusLabels } from "@/lib/purchase-status";
 import { formatDate, formatWon } from "@/lib/utils";
 
 export default async function ProfilePage() {
@@ -56,7 +57,7 @@ export default async function ProfilePage() {
                     <p className="mt-1 text-xs font-bold text-white/70">{formatDate(purchase.created_at)}</p>
                   </div>
                   <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-black text-white">
-                    {purchase.status}
+                    {purchaseStatusLabels[purchase.status]}
                   </span>
                 </div>
                 <p className="mt-3 text-sm font-black text-white">{formatWon(purchase.amount_krw)}</p>

@@ -40,6 +40,11 @@ export default async function AdminPage() {
           <h2>{products.length}</h2>
           <p>상점 상품 등록/수정</p>
         </Link>
+        <Link href="/admin/purchases" className="glass-card">
+          <span className="eyebrow">ORDERS</span>
+          <h2>주문</h2>
+          <p>구매내역, 지급 상태, 굿즈 배송 관리</p>
+        </Link>
         <Link href="/admin/legal" className="glass-card">
           <span className="eyebrow">POLICY</span>
           <h2>3</h2>

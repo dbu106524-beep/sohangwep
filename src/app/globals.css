@@ -825,6 +825,63 @@ body.lightbox-open {
   white-space: pre-wrap;
 }
 
+.admin-order-list {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-order-card {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-order-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(240px, 0.8fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.order-user-box,
+.order-shipping-box {
+  border: 1px solid rgba(255, 221, 153, 0.16);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.65;
+}
+
+.order-user-box strong,
+.order-shipping-box strong {
+  display: block;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.order-status {
+  color: #fff8ea;
+  font-weight: 950;
+}
+
+.admin-order-actions,
+.order-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.order-shipping-form {
+  flex: 1 1 420px;
+}
+
+.order-inline-form .admin-select,
+.order-inline-form .admin-input {
+  min-width: 150px;
+  margin-bottom: 0;
+}
+
 @media (max-width: 1280px) {
   .screenshot-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -834,6 +891,10 @@ body.lightbox-open {
 @media (max-width: 980px) {
   .screenshot-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-order-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -110,7 +110,10 @@ create table if not exists public.purchases (
   shipping_phone text,
   shipping_address text,
   shipping_message text,
-  status text not null default 'pending' check (status in ('pending', 'paid', 'fulfilled', 'failed', 'refunded')),
+  tracking_carrier text,
+  tracking_number text,
+  shipped_at timestamptz,
+  status text not null default 'pending' check (status in ('pending', 'paid', 'fulfilled', 'failed', 'refunded', 'shipped')),
   payment_provider text not null default 'test',
   payment_reference text,
   created_at timestamptz not null default now()
@@ -151,8 +154,13 @@ alter table public.purchases add column if not exists shipping_recipient text;
 alter table public.purchases add column if not exists shipping_phone text;
 alter table public.purchases add column if not exists shipping_address text;
 alter table public.purchases add column if not exists shipping_message text;
+alter table public.purchases add column if not exists tracking_carrier text;
+alter table public.purchases add column if not exists tracking_number text;
+alter table public.purchases add column if not exists shipped_at timestamptz;
 alter table public.purchases drop constraint if exists purchases_product_kind_check;
 alter table public.purchases add constraint purchases_product_kind_check check (product_kind in ('credit', 'goods'));
+alter table public.purchases drop constraint if exists purchases_status_check;
+alter table public.purchases add constraint purchases_status_check check (status in ('pending', 'paid', 'fulfilled', 'failed', 'refunded', 'shipped'));
 
 create table if not exists public.community_comments (
   id uuid primary key default gen_random_uuid(),

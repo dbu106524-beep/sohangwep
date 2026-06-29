@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServiceClient, hasSupabaseEnv } from "@/lib/supabase/server";
 import { noticeTypeLabels } from "@/lib/site-content";
-import type { LegalPageSlug, Notice } from "@/lib/types";
+import type { LegalPageSlug, Notice, Purchase } from "@/lib/types";
 import { getSiteUrl, slugify } from "@/lib/utils";
 
 async function assertAdmin() {
@@ -131,6 +131,15 @@ function getLegalSlug(formData: FormData): LegalPageSlug {
   }
 
   return "service";
+}
+
+function getPurchaseStatus(formData: FormData): Purchase["status"] {
+  const status = String(formData.get("status") ?? "pending");
+  if (status === "paid" || status === "fulfilled" || status === "failed" || status === "refunded" || status === "shipped") {
+    return status;
+  }
+
+  return "pending";
 }
 
 async function sendNoticeDiscordNotification(
@@ -305,6 +314,65 @@ export async function updateLegalPageAction(formData: FormData) {
   revalidatePath("/admin/legal");
   revalidatePath(`/terms/${slug}`);
   redirect("/admin/legal?saved=1");
+}
+
+export async function updatePurchaseStatusAction(formData: FormData) {
+  await assertAdmin();
+
+  if (!hasSupabaseEnv()) {
+    revalidatePath("/admin/purchases");
+    return;
+  }
+
+  const id = String(formData.get("id") ?? "");
+  const status = getPurchaseStatus(formData);
+  const supabase = await createSupabaseServiceClient();
+  const { error } = await supabase.from("purchases").update({ status }).eq("id", id);
+
+  if (error) {
+    throw new Error(`주문 상태 변경에 실패했습니다: ${error.message}`);
+  }
+
+  revalidatePath("/admin/purchases");
+  revalidatePath("/profile/purchases");
+  revalidatePath("/profile");
+}
+
+export async function shipPurchaseAction(formData: FormData) {
+  await assertAdmin();
+
+  if (!hasSupabaseEnv()) {
+    revalidatePath("/admin/purchases");
+    return;
+  }
+
+  const id = String(formData.get("id") ?? "");
+  const trackingCarrier = String(formData.get("tracking_carrier") ?? "").trim();
+  const trackingNumber = String(formData.get("tracking_number") ?? "").trim();
+
+  if (!trackingCarrier || !trackingNumber) {
+    throw new Error("택배사와 송장번호를 입력해 주세요.");
+  }
+
+  const supabase = await createSupabaseServiceClient();
+  const { error } = await supabase
+    .from("purchases")
+    .update({
+      status: "shipped",
+      tracking_carrier: trackingCarrier,
+      tracking_number: trackingNumber,
+      shipped_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("product_kind", "goods");
+
+  if (error) {
+    throw new Error(`발송 처리에 실패했습니다: ${error.message}`);
+  }
+
+  revalidatePath("/admin/purchases");
+  revalidatePath("/profile/purchases");
+  revalidatePath("/profile");
 }
 
 export async function createProductAction(formData: FormData) {

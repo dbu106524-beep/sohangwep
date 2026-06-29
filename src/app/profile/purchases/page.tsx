@@ -1,6 +1,7 @@
 import { PageHero } from "@/components/page-hero";
 import { requireCurrentUser } from "@/lib/auth";
 import { getPurchases } from "@/lib/data";
+import { getTrackingUrl, purchaseStatusLabels } from "@/lib/purchase-status";
 import { formatDate, formatWon } from "@/lib/utils";
 
 export default async function PurchasesPage() {
@@ -21,11 +22,30 @@ export default async function PurchasesPage() {
                     {purchase.shipping_recipient} / {purchase.shipping_phone}
                     <br />
                     {purchase.shipping_address}
+                    {purchase.tracking_number ? (
+                      <>
+                        <br />
+                        송장: {purchase.tracking_carrier} {purchase.tracking_number}
+                        {getTrackingUrl(purchase.tracking_carrier, purchase.tracking_number) ? (
+                          <>
+                            {" "}
+                            <a
+                              href={getTrackingUrl(purchase.tracking_carrier, purchase.tracking_number) ?? undefined}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-link"
+                            >
+                              배송조회
+                            </a>
+                          </>
+                        ) : null}
+                      </>
+                    ) : null}
                   </p>
                 ) : null}
               </div>
               <span className="font-bold text-white">{formatWon(purchase.amount_krw)}</span>
-              <span className="font-bold text-white">{purchase.status}</span>
+              <span className="font-bold text-white">{purchaseStatusLabels[purchase.status]}</span>
               <span className="text-sm font-bold text-white/80 md:text-right">{formatDate(purchase.created_at)}</span>
             </div>
           ))}

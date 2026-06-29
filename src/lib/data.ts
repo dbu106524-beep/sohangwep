@@ -2,7 +2,7 @@ import { guides, purchases } from "@/lib/mock-data";
 import { defaultLegalPages } from "@/lib/legal-content";
 import { fallbackNotices, fallbackProducts, sortNotices } from "@/lib/site-content";
 import { createSupabaseServerClient, createSupabaseServiceClient, hasSupabaseEnv } from "@/lib/supabase/server";
-import type { CommunityCategory, CommunityComment, CommunityPost, Guide, LegalPage, LegalPageSlug, Notice, Product, Purchase } from "@/lib/types";
+import type { AdminPurchase, CommunityCategory, CommunityComment, CommunityPost, Guide, LegalPage, LegalPageSlug, Notice, Product, Purchase, Profile } from "@/lib/types";
 
 function logSupabaseFallback(scope: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
@@ -181,6 +181,48 @@ export async function getPurchases(userId?: string): Promise<Purchase[]> {
   }
 
   return data ?? [];
+}
+
+export async function getAdminPurchases(): Promise<AdminPurchase[]> {
+  if (!hasSupabaseEnv()) {
+    return purchases.map((purchase) => ({
+      ...purchase,
+      profile: {
+        display_name: "데모 관리자",
+        discord_id: "123456789012345678",
+        minecraft_account_name: "StarMiner",
+        minecraft_name: "StarMiner",
+        avatar_url: null,
+      },
+    }));
+  }
+
+  const supabase = await createSupabaseServiceClient();
+  const { data, error } = await supabase
+    .from("purchases")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    logSupabaseFallback("getAdminPurchases", error.message);
+    return [];
+  }
+
+  const rows = data ?? [];
+  const userIds = Array.from(new Set(rows.map((purchase) => purchase.user_id)));
+  const { data: profiles } = userIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id,display_name,discord_id,minecraft_account_name,minecraft_name,avatar_url")
+        .in("id", userIds)
+    : { data: [] as Array<Pick<Profile, "id" | "display_name" | "discord_id" | "minecraft_account_name" | "minecraft_name" | "avatar_url">> };
+
+  const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+
+  return rows.map((purchase) => ({
+    ...purchase,
+    profile: profileById.get(purchase.user_id) ?? null,
+  }));
 }
 
 function mapCommunityPost(row: unknown): CommunityPost {
