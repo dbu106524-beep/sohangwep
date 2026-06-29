@@ -90,7 +90,7 @@ export const products: Product[] = [
     slug: "stardust-cash-5000",
     description: "가볍게 시작하기 좋은 기본 스타 크레딧 충전권",
     details:
-      "구매 완료 후 프로필 스타 크레딧 잔액에 5,000 스타 크레딧이 반영됩니다. 테스트 모드에서는 즉시 성공 화면으로 이동합니다.",
+      "구매 완료 후 인게임으로 5,000 스타 크레딧 지급 요청이 처리됩니다. 테스트 모드에서는 즉시 성공 화면으로 이동합니다.",
     product_kind: "credit",
     price_krw: 5000,
     discount_percent: 0,

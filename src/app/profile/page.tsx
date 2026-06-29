@@ -19,16 +19,14 @@ export default async function ProfilePage() {
       <PageHero
         eyebrow="My orbit"
         title={`${user.name}의 프로필`}
-        description="Discord 로그인 상태, 스타 크레딧, 마인크래프트 닉네임, 구매 내역을 확인하는 공간입니다."
+        description="Discord 로그인 상태, 마인크래프트 닉네임, 구매 내역을 확인하는 공간입니다."
       />
 
       <section className="section-shell grid gap-6 md:grid-cols-[0.8fr_1.2fr]">
         <aside className="glass-card rounded-3xl p-7 profile-panel-readable">
-          <p className="text-sm font-black text-white">스타 크레딧</p>
-          <p className="mt-2 text-4xl font-black text-white">
-            {(user.profile?.cash_balance ?? 0).toLocaleString("ko-KR")}
-          </p>
-          <p className="mt-1 text-sm font-bold text-white/80">보유 스타 크레딧</p>
+          <p className="text-sm font-black text-white">계정 연동</p>
+          <p className="mt-2 text-3xl font-black text-white">탐험대원 정보</p>
+          <p className="mt-1 text-sm font-bold text-white/80">후원 재화는 인게임에서 지급 및 확인됩니다.</p>
 
           <div className="mt-6 rounded-3xl bg-white/10 p-5 text-sm leading-7 text-white">
             마인크래프트 닉네임: <strong>{minecraftProfileName}</strong>
