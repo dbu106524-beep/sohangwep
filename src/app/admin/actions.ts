@@ -135,7 +135,14 @@ function getLegalSlug(formData: FormData): LegalPageSlug {
 
 function getPurchaseStatus(formData: FormData): Purchase["status"] {
   const status = String(formData.get("status") ?? "pending");
-  if (status === "paid" || status === "fulfilled" || status === "failed" || status === "refunded" || status === "shipped") {
+  if (
+    status === "paid" ||
+    status === "fulfilled" ||
+    status === "failed" ||
+    status === "refunded" ||
+    status === "shipped" ||
+    status === "delivered"
+  ) {
     return status;
   }
 

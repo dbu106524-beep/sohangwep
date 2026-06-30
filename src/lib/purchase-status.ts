@@ -7,6 +7,7 @@ export const purchaseStatusLabels: Record<Purchase["status"], string> = {
   failed: "지급오류",
   refunded: "환불완료",
   shipped: "배송중",
+  delivered: "배송완료",
 };
 
 export const purchaseStatusOptions: Array<{ value: Purchase["status"]; label: string }> = [
@@ -16,6 +17,7 @@ export const purchaseStatusOptions: Array<{ value: Purchase["status"]; label: st
   { value: "failed", label: "지급오류" },
   { value: "refunded", label: "환불완료" },
   { value: "shipped", label: "배송중" },
+  { value: "delivered", label: "배송완료" },
 ];
 
 export function getTrackingUrl(carrier?: string | null, trackingNumber?: string | null) {

@@ -89,7 +89,7 @@ export type Purchase = {
   tracking_carrier: string | null;
   tracking_number: string | null;
   shipped_at: string | null;
-  status: "pending" | "paid" | "fulfilled" | "failed" | "refunded" | "shipped";
+  status: "pending" | "paid" | "fulfilled" | "failed" | "refunded" | "shipped" | "delivered";
   payment_provider: "test" | "ready";
   payment_reference: string | null;
   created_at: string;
