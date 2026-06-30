@@ -104,7 +104,22 @@ export async function POST(request: Request) {
   }
 
   if (paymentMethod === "bank_transfer" && productKind === "credit") {
-    await notifyDonationOrderCreated(purchaseId);
+    await notifyDonationOrderCreated(purchaseId, {
+      orderId: purchaseId,
+      orderReference,
+      productName: product.name,
+      amountKrw,
+      cashAmount: product.cash_amount ?? 0,
+      minecraftItemKey: product.minecraft_item_key ?? "",
+      userId: user.id,
+      discordId: user.discordId ?? "",
+      displayName: user.name,
+      minecraftUuid: user.profile?.minecraft_uuid ?? "",
+      minecraftAccountName: user.profile?.minecraft_account_name ?? "",
+      minecraftName: user.profile?.minecraft_name ?? user.profile?.minecraft_account_name ?? "",
+      createdAt: new Date().toISOString(),
+      orderUrl: `${getSiteUrl()}/profile/purchases`,
+    });
   }
 
   return NextResponse.json({
