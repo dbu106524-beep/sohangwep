@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser, getDemoUser } from "@/lib/auth";
 import { getProducts } from "@/lib/data";
+import { notifyDonationOrderCreated } from "@/lib/discord-webhook";
 import { createSupabaseServerClient, hasSupabaseEnv } from "@/lib/supabase/server";
 import { getDiscountedPrice, getSiteUrl } from "@/lib/utils";
 
@@ -100,6 +101,10 @@ export async function POST(request: Request) {
     }
 
     purchaseId = data.id;
+  }
+
+  if (paymentMethod === "bank_transfer" && productKind === "credit") {
+    await notifyDonationOrderCreated(purchaseId);
   }
 
   return NextResponse.json({
