@@ -4,14 +4,17 @@ import { getProducts } from "@/lib/data";
 import { createSupabaseServerClient, hasSupabaseEnv } from "@/lib/supabase/server";
 import { getDiscountedPrice, getSiteUrl } from "@/lib/utils";
 
+type CheckoutBody = {
+  productId?: string;
+  paymentMethod?: "bank_transfer" | "test";
+  shippingRecipient?: string;
+  shippingPhone?: string;
+  shippingAddress?: string;
+  shippingMessage?: string;
+};
+
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as {
-    productId?: string;
-    shippingRecipient?: string;
-    shippingPhone?: string;
-    shippingAddress?: string;
-    shippingMessage?: string;
-  } | null;
+  const body = (await request.json().catch(() => null)) as CheckoutBody | null;
   const productId = body?.productId;
 
   if (!productId) {
@@ -22,20 +25,34 @@ export async function POST(request: Request) {
   const product = products.find((item) => item.id === productId);
 
   if (!product) {
-    return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    return NextResponse.json({ error: "상품을 찾을 수 없습니다." }, { status: 404 });
   }
 
   const user = (await getCurrentUser()) ?? (!hasSupabaseEnv() ? await getDemoUser() : null);
 
   if (!user) {
-    return NextResponse.json({ error: "Discord login is required." }, { status: 401 });
-  }
-
-  if (!user.isAdmin) {
-    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+    return NextResponse.json({ error: "디스코드 로그인이 필요합니다." }, { status: 401 });
   }
 
   const productKind = product.product_kind ?? "credit";
+  const paymentMethod = body?.paymentMethod === "bank_transfer" ? "bank_transfer" : "test";
+
+  if (paymentMethod === "test" && !user.isAdmin) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
+  if (productKind === "goods" && !user.isAdmin) {
+    return NextResponse.json({ error: "굿즈 주문은 아직 관리자 테스트만 가능합니다." }, { status: 403 });
+  }
+
+  if (productKind === "goods" && paymentMethod !== "test") {
+    return NextResponse.json({ error: "굿즈는 아직 테스트 주문만 가능합니다." }, { status: 400 });
+  }
+
+  if (productKind === "credit" && paymentMethod !== "bank_transfer" && !user.isAdmin) {
+    return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 신청해주세요." }, { status: 400 });
+  }
+
   const amountKrw = getDiscountedPrice(product.price_krw, product.discount_percent);
   const shippingRecipient = String(body?.shippingRecipient ?? "").trim();
   const shippingPhone = String(body?.shippingPhone ?? "").trim();
@@ -43,10 +60,10 @@ export async function POST(request: Request) {
   const shippingMessage = String(body?.shippingMessage ?? "").trim();
 
   if (productKind === "goods" && (!shippingRecipient || !shippingPhone || !shippingAddress)) {
-    return NextResponse.json({ error: "굿즈 주문은 받는 사람, 연락처, 배송지 주소가 필요합니다." }, { status: 400 });
+    return NextResponse.json({ error: "굿즈 주문에는 받는 사람, 연락처, 배송지 주소가 필요합니다." }, { status: 400 });
   }
 
-  const orderReference = `test_${Date.now()}`;
+  const orderReference = `${paymentMethod === "bank_transfer" ? "AST" : "test"}_${Date.now()}`;
   let purchaseId = orderReference;
 
   if (hasSupabaseEnv()) {
@@ -66,8 +83,13 @@ export async function POST(request: Request) {
         tracking_carrier: null,
         tracking_number: null,
         shipped_at: null,
+        donation_ticket_channel_id: null,
+        donation_depositor: null,
+        donation_reported_at: null,
+        donation_note: null,
+        fulfilled_at: null,
         status: "pending",
-        payment_provider: "test",
+        payment_provider: paymentMethod,
         payment_reference: orderReference,
       })
       .select("id")
@@ -81,8 +103,8 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({
-    mode: process.env.PAYMENT_MODE ?? "test",
+    mode: paymentMethod,
     purchaseId,
-    redirectUrl: `${getSiteUrl()}/shop/success?order=${encodeURIComponent(purchaseId)}`,
+    redirectUrl: `${getSiteUrl()}/shop/success?order=${encodeURIComponent(purchaseId)}&mode=${paymentMethod}`,
   });
 }

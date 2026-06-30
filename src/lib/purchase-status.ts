@@ -1,21 +1,21 @@
 import type { Purchase } from "@/lib/types";
 
 export const purchaseStatusLabels: Record<Purchase["status"], string> = {
-  pending: "지급전",
-  paid: "지급대기",
+  pending: "입금대기",
+  paid: "입금확인중",
   fulfilled: "지급완료",
   failed: "지급오류",
-  refunded: "환불완료",
+  refunded: "환불/거절",
   shipped: "배송중",
   delivered: "배송완료",
 };
 
 export const purchaseStatusOptions: Array<{ value: Purchase["status"]; label: string }> = [
-  { value: "pending", label: "지급전" },
-  { value: "paid", label: "지급대기" },
+  { value: "pending", label: "입금대기" },
+  { value: "paid", label: "입금확인중" },
   { value: "fulfilled", label: "지급완료" },
   { value: "failed", label: "지급오류" },
-  { value: "refunded", label: "환불완료" },
+  { value: "refunded", label: "환불/거절" },
   { value: "shipped", label: "배송중" },
   { value: "delivered", label: "배송완료" },
 ];

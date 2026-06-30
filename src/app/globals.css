@@ -205,6 +205,19 @@ body.lightbox-open {
   grid-column: 1 / -1;
 }
 
+.purchase-box,
+.payment-method-box {
+  display: grid;
+  gap: 14px;
+}
+
+.payment-method-box {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.18);
+}
+
 .purchase-popup {
   position: fixed;
   inset: 0;

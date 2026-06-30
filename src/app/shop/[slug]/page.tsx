@@ -11,6 +11,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!product) {
     notFound();
   }
+
   const imageUrls = getImageUrls(product);
   const discountPercent = normalizeDiscountPercent(product.discount_percent);
   const finalPrice = getDiscountedPrice(product.price_krw, discountPercent);
@@ -46,7 +47,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
           <p>{product.details}</p>
           <div className="notice-box">
-            테스트 모드에서는 실제 결제가 발생하지 않습니다. 결제 준비 API, 후원, 지급 요청 구조만 확인합니다.
+            {isGoods
+              ? "굿즈는 현재 관리자 테스트 주문만 가능합니다."
+              : "무통장 입금 신청 후 디스코드 후원 채널에서 계좌 안내와 입금 확인 절차를 확인할 수 있습니다."}
           </div>
           <PurchaseButton productId={product.id} productKind={product.product_kind ?? "credit"} />
         </div>

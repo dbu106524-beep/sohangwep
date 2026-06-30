@@ -36,7 +36,7 @@ export default async function AdminPurchasesPage() {
       <section className="page-hero art-hero shop-hero">
         <span className="eyebrow">ADMIN ORDERS</span>
         <h1>구매내역 관리</h1>
-        <p>유저별 주문 상태, 지급 상태, 굿즈 배송 정보를 관리합니다.</p>
+        <p>유저별 주문, 후원 신청, 지급 상태, 굿즈 배송 정보를 관리합니다.</p>
         <Link href="/admin" className="text-link">
           관리자 페이지로 돌아가기
         </Link>
@@ -48,7 +48,7 @@ export default async function AdminPurchasesPage() {
         ) : (
           <div className="empty-state">
             <h3>구매내역이 없습니다</h3>
-            <p>주문이 생성되면 이곳에 표시됩니다.</p>
+            <p>주문이 생성되면 여기에 표시됩니다.</p>
           </div>
         )}
       </section>
@@ -58,6 +58,7 @@ export default async function AdminPurchasesPage() {
 
 function PurchaseAdminCard({ purchase }: { purchase: Awaited<ReturnType<typeof getAdminPurchases>>[number] }) {
   const trackingUrl = getTrackingUrl(purchase.tracking_carrier, purchase.tracking_number);
+  const isCreditDonation = purchase.product_kind === "credit" && purchase.payment_provider === "bank_transfer";
 
   return (
     <article className="glass-card admin-order-card">
@@ -70,21 +71,47 @@ function PurchaseAdminCard({ purchase }: { purchase: Awaited<ReturnType<typeof g
       <div className="admin-order-grid">
         <div>
           <h2>{purchase.product_name}</h2>
-          <p className="muted">주문번호: <span className="font-mono">{purchase.id}</span></p>
-          <p className="muted">결제참조: <span className="font-mono">{purchase.payment_reference ?? "-"}</span></p>
+          <p className="muted">
+            주문번호: <span className="font-mono">{purchase.id}</span>
+          </p>
+          <p className="muted">
+            결제참조: <span className="font-mono">{purchase.payment_reference ?? "-"}</span>
+          </p>
           <strong className="price">{formatWon(purchase.amount_krw)}</strong>
         </div>
 
         <div className="order-user-box">
           <strong>{purchase.profile?.display_name ?? "알 수 없는 유저"}</strong>
-          <p>Discord ID: <span className="font-mono">{purchase.profile?.discord_id ?? "-"}</span></p>
+          <p>
+            Discord ID: <span className="font-mono">{purchase.profile?.discord_id ?? "-"}</span>
+          </p>
           <p>마크 닉네임: {minecraftName(purchase)}</p>
         </div>
+
+        {isCreditDonation ? (
+          <div className="order-shipping-box">
+            <strong>후원 처리 정보</strong>
+            <p>
+              티켓 채널:{" "}
+              {purchase.donation_ticket_channel_id ? (
+                <span className="font-mono">{purchase.donation_ticket_channel_id}</span>
+              ) : (
+                "생성 대기"
+              )}
+            </p>
+            <p>입금자명: {purchase.donation_depositor ?? "-"}</p>
+            {purchase.donation_reported_at ? <p>입금요청: {formatDate(purchase.donation_reported_at)}</p> : null}
+            {purchase.fulfilled_at ? <p>지급완료: {formatDate(purchase.fulfilled_at)}</p> : null}
+            {purchase.donation_note ? <p>비고: {purchase.donation_note}</p> : null}
+          </div>
+        ) : null}
 
         {purchase.product_kind === "goods" ? (
           <div className="order-shipping-box">
             <strong>배송 정보</strong>
-            <p>{purchase.shipping_recipient ?? "-"} / {purchase.shipping_phone ?? "-"}</p>
+            <p>
+              {purchase.shipping_recipient ?? "-"} / {purchase.shipping_phone ?? "-"}
+            </p>
             <p>{purchase.shipping_address ?? "-"}</p>
             {purchase.shipping_message ? <p>메시지: {purchase.shipping_message}</p> : null}
             {purchase.tracking_number ? (

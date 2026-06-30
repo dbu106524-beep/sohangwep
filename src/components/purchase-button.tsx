@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type ProductKind = "credit" | "goods";
+type PaymentMethod = "bank_transfer" | "test";
 
 type DaumPostcodeData = {
   zonecode: string;
@@ -87,7 +88,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
     document.body.appendChild(script);
   }
 
-  async function checkout() {
+  async function checkout(paymentMethod: PaymentMethod) {
     setError(null);
     setShowErrorPopup(false);
 
@@ -97,7 +98,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
       .trim();
 
     if (isGoods && (!shippingRecipient.trim() || !shippingPhone.trim() || !shippingBaseAddress.trim() || !shippingDetailAddress.trim())) {
-      showError("굿즈 주문은 받는 사람, 연락처, 주소 검색, 상세주소가 필요합니다.");
+      showError("굿즈 주문에는 받는 사람, 연락처, 주소 검색, 상세주소가 필요합니다.");
       return;
     }
 
@@ -108,6 +109,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         productId,
+        paymentMethod,
         shippingRecipient,
         shippingPhone,
         shippingAddress: fullShippingAddress,
@@ -119,7 +121,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
     setPending(false);
 
     if (!response.ok || !data.redirectUrl) {
-      showError(data.error ?? "결제 준비 중 문제가 발생했어요.");
+      showError(data.error ?? "결제 준비 중 문제가 발생했습니다.");
       return;
     }
 
@@ -156,18 +158,27 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
             <span>배송메시지</span>
             <textarea value={shippingMessage} onChange={(event) => setShippingMessage(event.target.value)} placeholder="문 앞에 놓아주세요 등" rows={3} />
           </label>
+          <button type="button" onClick={() => checkout("test")} disabled={pending} className="button primary">
+            {pending ? "주문 준비 중..." : "굿즈 테스트 주문하기"}
+          </button>
         </div>
-      ) : null}
-
-      <button type="button" onClick={checkout} disabled={pending} className="button primary">
-        {pending ? "결제 준비 중..." : isGoods ? "굿즈 테스트 주문하기" : "테스트 결제하기"}
-      </button>
+      ) : (
+        <div className="payment-method-box">
+          <p className="font-black text-white">결제 방법</p>
+          <button type="button" onClick={() => checkout("bank_transfer")} disabled={pending} className="button primary">
+            {pending ? "후원 신청 중..." : "무통장 입금으로 스타크레딧 신청"}
+          </button>
+          <p className="text-sm font-bold text-white/70">
+            신청 후 디스코드에 전용 후원 채널이 열립니다. 채널 안내에 따라 입금 후 입금자명을 남겨주세요.
+          </p>
+        </div>
+      )}
 
       {showErrorPopup && error ? (
         <div className="purchase-popup" role="alert">
           <div className="purchase-popup-box">
             <strong>{error}</strong>
-            <p>현재 테스트 주문과 결제는 관리자만 사용할 수 있습니다.</p>
+            <p>다시 시도해도 문제가 계속되면 관리자에게 문의해 주세요.</p>
             <button type="button" className="button primary" onClick={() => setShowErrorPopup(false)}>
               확인
             </button>

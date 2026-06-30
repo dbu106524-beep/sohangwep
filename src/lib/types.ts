@@ -89,8 +89,13 @@ export type Purchase = {
   tracking_carrier: string | null;
   tracking_number: string | null;
   shipped_at: string | null;
+  donation_ticket_channel_id: string | null;
+  donation_depositor: string | null;
+  donation_reported_at: string | null;
+  donation_note: string | null;
+  fulfilled_at: string | null;
   status: "pending" | "paid" | "fulfilled" | "failed" | "refunded" | "shipped" | "delivered";
-  payment_provider: "test" | "ready";
+  payment_provider: "test" | "ready" | "bank_transfer";
   payment_reference: string | null;
   created_at: string;
 };

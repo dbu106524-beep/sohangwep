@@ -113,6 +113,11 @@ create table if not exists public.purchases (
   tracking_carrier text,
   tracking_number text,
   shipped_at timestamptz,
+  donation_ticket_channel_id text,
+  donation_depositor text,
+  donation_reported_at timestamptz,
+  donation_note text,
+  fulfilled_at timestamptz,
   status text not null default 'pending' check (status in ('pending', 'paid', 'fulfilled', 'failed', 'refunded', 'shipped', 'delivered')),
   payment_provider text not null default 'test',
   payment_reference text,
@@ -157,6 +162,11 @@ alter table public.purchases add column if not exists shipping_message text;
 alter table public.purchases add column if not exists tracking_carrier text;
 alter table public.purchases add column if not exists tracking_number text;
 alter table public.purchases add column if not exists shipped_at timestamptz;
+alter table public.purchases add column if not exists donation_ticket_channel_id text;
+alter table public.purchases add column if not exists donation_depositor text;
+alter table public.purchases add column if not exists donation_reported_at timestamptz;
+alter table public.purchases add column if not exists donation_note text;
+alter table public.purchases add column if not exists fulfilled_at timestamptz;
 alter table public.purchases drop constraint if exists purchases_product_kind_check;
 alter table public.purchases add constraint purchases_product_kind_check check (product_kind in ('credit', 'goods'));
 alter table public.purchases drop constraint if exists purchases_status_check;
