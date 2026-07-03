@@ -127,6 +127,58 @@ body::before {
   aspect-ratio: 1;
 }
 
+#goods .shop-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 360px));
+  justify-content: center;
+}
+
+.goods-product-card {
+  min-height: 100%;
+}
+
+.goods-product-card .product-body {
+  padding: 22px;
+}
+
+.goods-product-image {
+  aspect-ratio: 4 / 3;
+  min-height: 250px;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(255, 211, 111, 0.14), transparent 38%),
+    rgba(255, 255, 255, 0.055);
+}
+
+.goods-product-image img,
+.goods-product-image .lightbox-trigger img,
+.product-image-gallery.goods-product-image img {
+  object-fit: contain;
+  padding: 10px;
+}
+
+.goods-detail-section {
+  grid-template-columns: minmax(520px, 1.45fr) minmax(390px, 0.8fr);
+  gap: 28px;
+}
+
+.goods-detail-media {
+  min-height: auto;
+}
+
+.goods-detail-media .goods-product-image {
+  min-height: min(720px, calc(100vh - 220px));
+  aspect-ratio: 1 / 1;
+  border-bottom: 0;
+}
+
+.goods-detail-media .product-image-gallery.goods-product-image {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding: 18px;
+}
+
+.goods-detail-media .product-image-gallery.goods-product-image img {
+  aspect-ratio: 1 / 1;
+}
+
 .lightbox-trigger {
   display: block;
   width: 100%;
@@ -159,15 +211,17 @@ body.lightbox-open {
   z-index: 200;
   display: grid;
   place-items: center;
-  padding: 76px 24px 32px;
+  padding: 72px 24px 24px;
   background: rgba(2, 5, 14, 0.86);
   backdrop-filter: blur(10px);
   cursor: zoom-out;
 }
 
 .image-lightbox img {
-  max-width: min(100%, 1600px);
-  max-height: calc(100vh - 118px);
+  width: auto;
+  height: auto;
+  max-width: min(calc(100vw - 48px), 1600px);
+  max-height: calc(100dvh - 104px);
   border: 1px solid rgba(255, 248, 234, 0.2);
   border-radius: var(--radius);
   object-fit: contain;
@@ -904,6 +958,14 @@ body.lightbox-open {
 @media (max-width: 980px) {
   .screenshot-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .goods-detail-section {
+    grid-template-columns: 1fr;
+  }
+
+  .goods-detail-media .goods-product-image {
+    min-height: auto;
   }
 
   .admin-order-grid {

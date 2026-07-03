@@ -58,19 +58,16 @@ export function ImageUploadInput({
       for (const file of files) {
         const normalized = await normalizeImageFile(file);
         totalSize += normalized.size;
-        const extension = normalized.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "webp";
-        const path = `products/${crypto.randomUUID()}.${extension}`;
-        const { error } = await supabase.storage.from("shop-images").upload(path, normalized, {
-          contentType: normalized.type,
-          upsert: false,
-        });
+        const signedUpload = await createSignedUpload(normalized);
+        const { error } = await supabase.storage
+          .from("shop-images")
+          .uploadToSignedUrl(signedUpload.path, signedUpload.token, normalized);
 
         if (error) {
           throw new Error(error.message);
         }
 
-        const { data } = supabase.storage.from("shop-images").getPublicUrl(path);
-        urls.push(data.publicUrl);
+        urls.push(signedUpload.publicUrl);
       }
 
       setFormImageValues(form, urls);
@@ -90,6 +87,28 @@ export function ImageUploadInput({
       {status ? <small className="field-help">{status}</small> : null}
     </>
   );
+}
+
+async function createSignedUpload(file: File) {
+  const response = await fetch("/api/admin/shop-images/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type || "image/webp",
+    }),
+  });
+  const data = (await response.json().catch(() => null)) as { path?: string; token?: string; publicUrl?: string; error?: string } | null;
+
+  if (!response.ok || !data?.path || !data.token || !data.publicUrl) {
+    throw new Error(data?.error || "업로드 URL을 만들 수 없습니다.");
+  }
+
+  return {
+    path: data.path,
+    token: data.token,
+    publicUrl: data.publicUrl,
+  };
 }
 
 function setFormImageValues(form: HTMLFormElement, urls: string[]) {

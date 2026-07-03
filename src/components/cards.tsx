@@ -32,8 +32,8 @@ export function ProductCard({ product }: { product: Product }) {
   const isGoods = product.product_kind === "goods";
 
   return (
-    <Link href={`/shop/${product.slug}`} className="product-card">
-      <div className="product-image">
+    <Link href={`/shop/${product.slug}`} className={`product-card${isGoods ? " goods-product-card" : ""}`}>
+      <div className={`product-image${isGoods ? " goods-product-image" : ""}`}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} />
         ) : (
