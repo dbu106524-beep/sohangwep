@@ -16,6 +16,8 @@ async function assertAdmin() {
 }
 
 const allowedImageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+const maxImageFileSize = 8 * 1024 * 1024;
+const maxImageUploadTotalSize = 40 * 1024 * 1024;
 const discordNewsSubject: Record<Notice["category"], string> = {
   notice: "공지사항이",
   update: "업데이트가",
@@ -47,8 +49,8 @@ async function uploadImageFile({ file, bucket, folder }: { file: File; bucket: s
     throw new Error("이미지는 PNG, JPG, WEBP, GIF 파일만 업로드할 수 있습니다.");
   }
 
-  if (file.size > 8 * 1024 * 1024) {
-    throw new Error("이미지는 8MB 이하만 업로드할 수 있습니다.");
+  if (file.size > maxImageFileSize) {
+    throw new Error("이미지는 파일 1개당 8MB 이하만 업로드할 수 있습니다.");
   }
 
   const supabase = await createSupabaseServiceClient();
@@ -81,9 +83,16 @@ async function resolveUploadedImageUrls({
   fallback?: string[];
 }) {
   const directUrl = String(formData.get("image_url") ?? "").trim();
+  const formImageUrls = parseImageList(formData.get("current_image_urls"), fallback);
   const files = getImageFiles(formData);
 
   if (files.length > 0) {
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
+    if (totalSize > maxImageUploadTotalSize) {
+      throw new Error("이미지는 한 번에 최대 40MB까지만 업로드할 수 있습니다.");
+    }
+
     const uploaded = [];
     for (const file of files) {
       uploaded.push(await uploadImageFile({ file, bucket, folder }));
@@ -92,10 +101,10 @@ async function resolveUploadedImageUrls({
   }
 
   if (directUrl) {
-    return [directUrl, ...fallback.filter((url) => url !== directUrl)].slice(0, 5);
+    return [directUrl, ...formImageUrls.filter((url) => url !== directUrl)].slice(0, 5);
   }
 
-  return fallback.slice(0, 5);
+  return formImageUrls.slice(0, 5);
 }
 
 async function resolveNoticeImageUrls(formData: FormData, fallback: string[] = []) {
@@ -122,6 +131,14 @@ function getDiscountPercent(formData: FormData) {
 function getSortOrder(formData: FormData) {
   const value = Number(formData.get("sort_order") ?? 0);
   return Number.isFinite(value) ? Math.round(value) : 0;
+}
+
+function getActionErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "요청을 처리하는 중 오류가 발생했습니다.";
 }
 
 function getLegalSlug(formData: FormData): LegalPageSlug {
@@ -219,7 +236,7 @@ export async function createNoticeAction(formData: FormData) {
     .single();
 
   if (error) {
-    throw new Error(`공지사항 작성에 실패했습니다: ${error.message}`);
+    throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
   }
 
   if (published && notice) {
@@ -262,7 +279,7 @@ export async function updateNoticeAction(formData: FormData) {
     .eq("id", id);
 
   if (error) {
-    throw new Error(`게시글 수정에 실패했습니다: ${error.message}`);
+    throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
   }
 
   revalidatePath("/notices");
@@ -315,7 +332,7 @@ export async function updateLegalPageAction(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(`정책 문서 저장에 실패했습니다: ${error.message}`);
+    throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
   }
 
   revalidatePath("/admin/legal");
@@ -337,7 +354,7 @@ export async function updatePurchaseStatusAction(formData: FormData) {
   const { error } = await supabase.from("purchases").update({ status }).eq("id", id);
 
   if (error) {
-    throw new Error(`주문 상태 변경에 실패했습니다: ${error.message}`);
+    throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
   }
 
   revalidatePath("/admin/purchases");
@@ -374,7 +391,7 @@ export async function shipPurchaseAction(formData: FormData) {
     .eq("product_kind", "goods");
 
   if (error) {
-    throw new Error(`발송 처리에 실패했습니다: ${error.message}`);
+    throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
   }
 
   revalidatePath("/admin/purchases");
@@ -390,49 +407,14 @@ export async function createProductAction(formData: FormData) {
     return;
   }
 
-  const name = String(formData.get("name") ?? "");
-  const productKind = getProductKind(formData);
-  const imageUrls = await resolveProductImageUrls(formData);
-  const supabase = await createSupabaseServiceClient();
-  await supabase.from("products").insert({
-    name,
-    slug: slugify(name),
-    description: String(formData.get("description") ?? ""),
-    details: String(formData.get("details") ?? ""),
-    product_kind: productKind,
-    price_krw: Number(formData.get("price_krw") ?? 0),
-    discount_percent: getDiscountPercent(formData),
-    cash_amount: productKind === "credit" ? Number(formData.get("cash_amount") ?? 0) : 0,
-    image_url: imageUrls[0] ?? null,
-    image_urls: imageUrls,
-    minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
-    sort_order: getSortOrder(formData),
-    active: formData.get("active") === "on",
-  });
-  revalidatePath("/shop");
-  revalidatePath("/admin/products");
-}
+  let actionError: string | null = null;
 
-export async function updateProductAction(formData: FormData) {
-  await assertAdmin();
-
-  if (!hasSupabaseEnv()) {
-    revalidatePath("/admin/products");
-    return;
-  }
-
-  const id = String(formData.get("id") ?? "");
-  const name = String(formData.get("name") ?? "");
-  const productKind = getProductKind(formData);
-  const currentImages = parseImageList(
-    formData.get("current_image_urls"),
-    [String(formData.get("current_image_url") ?? "").trim()].filter(Boolean),
-  );
-  const imageUrls = await resolveProductImageUrls(formData, currentImages);
-  const supabase = await createSupabaseServiceClient();
-  await supabase
-    .from("products")
-    .update({
+  try {
+    const name = String(formData.get("name") ?? "");
+    const productKind = getProductKind(formData);
+    const imageUrls = await resolveProductImageUrls(formData);
+    const supabase = await createSupabaseServiceClient();
+    const { error } = await supabase.from("products").insert({
       name,
       slug: slugify(name),
       description: String(formData.get("description") ?? ""),
@@ -446,8 +428,74 @@ export async function updateProductAction(formData: FormData) {
       minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
       sort_order: getSortOrder(formData),
       active: formData.get("active") === "on",
-    })
-    .eq("id", id);
+    });
+
+    if (error) {
+      throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
+    }
+  } catch (error) {
+    actionError = getActionErrorMessage(error);
+  }
+
+  if (actionError) {
+    redirect(`/admin/products?error=${encodeURIComponent(actionError)}`);
+  }
+
+  revalidatePath("/shop");
+  revalidatePath("/admin/products");
+  redirect("/admin/products?saved=1");
+}
+
+export async function updateProductAction(formData: FormData) {
+  await assertAdmin();
+
+  if (!hasSupabaseEnv()) {
+    revalidatePath("/admin/products");
+    return;
+  }
+
+  let actionError: string | null = null;
+
+  try {
+    const id = String(formData.get("id") ?? "");
+    const name = String(formData.get("name") ?? "");
+    const productKind = getProductKind(formData);
+    const currentImages = parseImageList(
+      formData.get("current_image_urls"),
+      [String(formData.get("current_image_url") ?? "").trim()].filter(Boolean),
+    );
+    const imageUrls = await resolveProductImageUrls(formData, currentImages);
+    const supabase = await createSupabaseServiceClient();
+    const { error } = await supabase
+      .from("products")
+      .update({
+        name,
+        slug: slugify(name),
+        description: String(formData.get("description") ?? ""),
+        details: String(formData.get("details") ?? ""),
+        product_kind: productKind,
+        price_krw: Number(formData.get("price_krw") ?? 0),
+        discount_percent: getDiscountPercent(formData),
+        cash_amount: productKind === "credit" ? Number(formData.get("cash_amount") ?? 0) : 0,
+        image_url: imageUrls[0] ?? null,
+        image_urls: imageUrls,
+        minecraft_item_key: productKind === "credit" ? String(formData.get("minecraft_item_key") ?? "") : null,
+        sort_order: getSortOrder(formData),
+        active: formData.get("active") === "on",
+      })
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
+    }
+  } catch (error) {
+    actionError = getActionErrorMessage(error);
+  }
+
+  if (actionError) {
+    redirect(`/admin/products?error=${encodeURIComponent(actionError)}`);
+  }
+
   revalidatePath("/shop");
   revalidatePath("/admin/products");
   redirect("/admin/products?saved=1");
@@ -461,9 +509,25 @@ export async function deleteProductAction(formData: FormData) {
     return;
   }
 
-  const id = String(formData.get("id") ?? "");
-  const supabase = await createSupabaseServiceClient();
-  await supabase.from("products").delete().eq("id", id);
+  let actionError: string | null = null;
+
+  try {
+    const id = String(formData.get("id") ?? "");
+    const supabase = await createSupabaseServiceClient();
+    const { error } = await supabase.from("products").delete().eq("id", id);
+
+    if (error) {
+      throw new Error(`이미지 업로드에 실패했습니다: ${error.message}`);
+    }
+  } catch (error) {
+    actionError = getActionErrorMessage(error);
+  }
+
+  if (actionError) {
+    redirect(`/admin/products?error=${encodeURIComponent(actionError)}`);
+  }
+
   revalidatePath("/shop");
   revalidatePath("/admin/products");
+  redirect("/admin/products?saved=1");
 }

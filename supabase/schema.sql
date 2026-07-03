@@ -102,7 +102,7 @@ alter table public.products add constraint products_discount_percent_check check
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
-  product_id uuid not null references public.products(id),
+  product_id uuid references public.products(id) on delete set null,
   product_name text not null,
   amount_krw integer not null check (amount_krw >= 0),
   product_kind text not null default 'credit' check (product_kind in ('credit', 'goods')),
@@ -446,6 +446,23 @@ on storage.objects for all
 to authenticated
 using (bucket_id = 'notice-images' and private.is_admin())
 with check (bucket_id = 'notice-images' and private.is_admin());
+
+insert into storage.buckets (id, name, public)
+values ('shop-images', 'shop-images', true)
+on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "public_read_shop_images" on storage.objects;
+create policy "public_read_shop_images"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'shop-images');
+
+drop policy if exists "admin_manage_shop_images" on storage.objects;
+create policy "admin_manage_shop_images"
+on storage.objects for all
+to authenticated
+using (bucket_id = 'shop-images' and private.is_admin())
+with check (bucket_id = 'shop-images' and private.is_admin());
 
 drop policy if exists "public_read_community_posts" on public.community_posts;
 create policy "public_read_community_posts"

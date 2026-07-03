@@ -1,4 +1,5 @@
 import { createProductAction, deleteProductAction, updateProductAction } from "@/app/admin/actions";
+import { ImageUploadInput } from "@/components/image-upload-input";
 import { requireAdmin } from "@/lib/auth";
 import { getProducts } from "@/lib/data";
 import type { Product } from "@/lib/types";
@@ -7,9 +8,9 @@ import { getImageUrls } from "@/lib/utils";
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const { saved } = await searchParams;
+  const { saved, error } = await searchParams;
   const { allowed } = await requireAdmin("/admin/products");
   const products = await getProducts({ includeInactive: true });
 
@@ -30,13 +31,18 @@ export default async function AdminProductsPage({
       <section className="page-hero art-hero shop-hero">
         <span className="eyebrow">ADMIN SHOP</span>
         <h1>상품 관리</h1>
-        <p>상점 상품을 등록하고 이미지를 업로드합니다.</p>
+        <p>상점 상품을 등록하고 이미지, 가격, 할인율, 표시 순서를 관리합니다.</p>
       </section>
 
       <section className="split-section">
         {saved === "1" ? (
           <div className="save-toast split-wide" role="status">
-            수정 완료됐습니다.
+            저장 완료되었습니다.
+          </div>
+        ) : null}
+        {error ? (
+          <div className="save-toast split-wide error" role="alert">
+            {error}
           </div>
         ) : null}
         <ProductForm action={createProductAction} title="새 상품 등록" submitLabel="등록" />
@@ -94,12 +100,14 @@ function ProductForm({
           <option value="credit">스타 크레딧</option>
           <option value="goods">굿즈</option>
         </select>
-        <small className="field-help">굿즈는 배송 정보 입력을 받고, 스타 크레딧 지급량과 마인크래프트 지급 키를 사용하지 않습니다.</small>
+        <small className="field-help">
+          굿즈는 배송 정보를 입력받고, 스타 크레딧 지급량과 마인크래프트 지급 키를 사용하지 않습니다.
+        </small>
       </label>
       <div className="admin-grid">
         <AdminInput name="sort_order" label="표시 순서" type="number" defaultValue={String(values?.sort_order ?? 0)} required />
         <AdminInput name="price_krw" label="가격" type="number" min="0" defaultValue={String(values?.price_krw ?? "")} required />
-        <AdminInput name="discount_percent" label="할인율 (%)" type="number" min="0" max="100" defaultValue={String(values?.discount_percent ?? 0)} required />
+        <AdminInput name="discount_percent" label="할인율(%)" type="number" min="0" max="100" defaultValue={String(values?.discount_percent ?? 0)} required />
         <AdminInput name="cash_amount" label="스타 크레딧 지급량" type="number" defaultValue={String(values?.cash_amount ?? "")} required />
       </div>
       <p className="field-help">표시 순서는 숫자가 낮을수록 상점에서 먼저 보입니다. 예: 1, 2, 3</p>
@@ -107,8 +115,10 @@ function ProductForm({
       <AdminInput name="image_url" label="이미지 URL 또는 Storage URL" defaultValue={values?.image_url ?? ""} />
       <label className="admin-field">
         <span>이미지 파일 업로드</span>
-        <input className="file-input" name="image_files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple />
-        <small className="field-help">최대 5장까지 업로드할 수 있습니다. 새 이미지를 선택하면 기존 이미지를 대체합니다.</small>
+        <ImageUploadInput />
+        <small className="field-help">
+          최대 5개까지 업로드할 수 있습니다. 새 이미지를 선택하면 기존 이미지 목록을 대체합니다.
+        </small>
       </label>
       {imageUrls.length ? (
         <div className="admin-image-grid">
