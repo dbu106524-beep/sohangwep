@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export function ImageLightbox({
   images,
@@ -17,6 +18,8 @@ export function ImageLightbox({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const activeImage = activeIndex === null ? null : images[activeIndex];
   const hasManyImages = images.length > 1;
+  const lightbox = renderLightbox();
+  const lightboxPortal = typeof document === "undefined" || !lightbox ? null : createPortal(lightbox, document.body);
 
   function moveSlide(direction: -1 | 1) {
     setSlideIndex((current) => (current + direction + images.length) % images.length);
@@ -94,7 +97,7 @@ export function ImageLightbox({
             </>
           ) : null}
         </div>
-        {renderLightbox()}
+        {lightboxPortal}
       </>
     );
   }
@@ -114,7 +117,7 @@ export function ImageLightbox({
           </button>
         ))}
       </div>
-      {renderLightbox()}
+      {lightboxPortal}
     </>
   );
 
