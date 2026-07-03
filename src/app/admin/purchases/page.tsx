@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { shipPurchaseAction, updatePurchaseStatusAction } from "@/app/admin/actions";
+import { deletePurchasesAction, shipPurchaseAction, updatePurchaseStatusAction } from "@/app/admin/actions";
+import { AdminPurchaseTools } from "@/components/admin-purchase-tools";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminPurchases } from "@/lib/data";
 import { getTrackingUrl, purchaseStatusLabels, purchaseStatusOptions } from "@/lib/purchase-status";
 import { formatDate, formatWon } from "@/lib/utils";
 
-function minecraftName(purchase: Awaited<ReturnType<typeof getAdminPurchases>>[number]) {
+type AdminPurchaseRow = Awaited<ReturnType<typeof getAdminPurchases>>[number];
+
+function minecraftName(purchase: AdminPurchaseRow) {
   const account = purchase.profile?.minecraft_account_name?.trim();
   const display = purchase.profile?.minecraft_name?.trim();
   if (account && display && account !== display) {
@@ -13,6 +16,29 @@ function minecraftName(purchase: Awaited<ReturnType<typeof getAdminPurchases>>[n
   }
 
   return display || account || "미연동";
+}
+
+function exportRows(purchases: AdminPurchaseRow[]) {
+  return purchases.map((purchase) => ({
+    id: purchase.id,
+    createdAt: formatDate(purchase.created_at),
+    productKind: purchase.product_kind,
+    productName: purchase.product_name,
+    amountKrw: purchase.amount_krw,
+    status: purchase.status,
+    paymentReference: purchase.payment_reference ?? "",
+    userName: purchase.profile?.display_name ?? "",
+    discordId: purchase.profile?.discord_id ?? "",
+    minecraftName: minecraftName(purchase),
+    depositor: purchase.donation_depositor ?? "",
+    shippingRecipient: purchase.shipping_recipient ?? "",
+    shippingPhone: purchase.shipping_phone ?? "",
+    shippingAddress: purchase.shipping_address ?? "",
+    shippingMessage: purchase.shipping_message ?? "",
+    trackingCarrier: purchase.tracking_carrier ?? "",
+    trackingNumber: purchase.tracking_number ?? "",
+    note: purchase.donation_note ?? "",
+  }));
 }
 
 export default async function AdminPurchasesPage() {
@@ -36,13 +62,16 @@ export default async function AdminPurchasesPage() {
       <section className="page-hero art-hero shop-hero">
         <span className="eyebrow">ADMIN ORDERS</span>
         <h1>구매내역 관리</h1>
-        <p>유저별 주문, 스타 크레딧 구매 신청, 지급 상태, 굿즈 배송 정보를 관리합니다.</p>
+        <p>스타 크레딧, 굿즈 주문, 입금 확인, 배송 상태를 한 곳에서 정리합니다.</p>
         <Link href="/admin" className="text-link">
           관리자 페이지로 돌아가기
         </Link>
       </section>
 
+      <form id="bulk-delete-purchases" action={deletePurchasesAction} />
+
       <section className="section-shell admin-order-list">
+        <AdminPurchaseTools rows={exportRows(purchases)} />
         {purchases.length ? (
           purchases.map((purchase) => <PurchaseAdminCard key={purchase.id} purchase={purchase} />)
         ) : (
@@ -56,13 +85,17 @@ export default async function AdminPurchasesPage() {
   );
 }
 
-function PurchaseAdminCard({ purchase }: { purchase: Awaited<ReturnType<typeof getAdminPurchases>>[number] }) {
+function PurchaseAdminCard({ purchase }: { purchase: AdminPurchaseRow }) {
   const trackingUrl = getTrackingUrl(purchase.tracking_carrier, purchase.tracking_number);
-  const isCreditDonation = purchase.product_kind === "credit" && purchase.payment_provider === "bank_transfer";
+  const isManualPayment = purchase.payment_provider === "bank_transfer";
 
   return (
-    <article className="glass-card admin-order-card">
+    <article className="glass-card admin-order-card" data-purchase-card data-status={purchase.status} data-kind={purchase.product_kind}>
       <div className="post-topline">
+        <label className="purchase-check-label">
+          <input type="checkbox" name="purchase_ids" value={purchase.id} form="bulk-delete-purchases" className="purchase-row-check" />
+          <span>선택</span>
+        </label>
         <span className="badge">{purchase.product_kind === "goods" ? "굿즈" : "스타 크레딧"}</span>
         <span className="order-status">{purchaseStatusLabels[purchase.status]}</span>
         <time>{formatDate(purchase.created_at)}</time>
@@ -88,9 +121,9 @@ function PurchaseAdminCard({ purchase }: { purchase: Awaited<ReturnType<typeof g
           <p>마크 닉네임: {minecraftName(purchase)}</p>
         </div>
 
-        {isCreditDonation ? (
+        {isManualPayment ? (
           <div className="order-shipping-box">
-            <strong>후원 처리 정보</strong>
+            <strong>결제 확인 정보</strong>
             <p>
               티켓 채널:{" "}
               {purchase.donation_ticket_channel_id ? (
@@ -101,7 +134,7 @@ function PurchaseAdminCard({ purchase }: { purchase: Awaited<ReturnType<typeof g
             </p>
             <p>입금자명: {purchase.donation_depositor ?? "-"}</p>
             {purchase.donation_reported_at ? <p>입금요청: {formatDate(purchase.donation_reported_at)}</p> : null}
-            {purchase.fulfilled_at ? <p>지급완료: {formatDate(purchase.fulfilled_at)}</p> : null}
+            {purchase.fulfilled_at ? <p>확인완료: {formatDate(purchase.fulfilled_at)}</p> : null}
             {purchase.donation_note ? <p>비고: {purchase.donation_note}</p> : null}
           </div>
         ) : null}

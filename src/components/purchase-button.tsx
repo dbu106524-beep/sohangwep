@@ -158,7 +158,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
             <span>배송메시지</span>
             <textarea value={shippingMessage} onChange={(event) => setShippingMessage(event.target.value)} placeholder="문 앞에 놓아주세요 등" rows={3} />
           </label>
-          <button type="button" onClick={() => checkout("test")} disabled={pending} className="button primary">
+          <button type="button" onClick={() => checkout("bank_transfer")} disabled={pending} className="button primary">
             {pending ? "주문 접수 중..." : "굿즈 주문하기"}
           </button>
         </div>

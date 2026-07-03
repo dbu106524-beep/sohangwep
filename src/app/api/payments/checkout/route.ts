@@ -38,16 +38,12 @@ export async function POST(request: Request) {
   const productKind = product.product_kind ?? "credit";
   const paymentMethod = body?.paymentMethod === "bank_transfer" ? "bank_transfer" : "test";
 
-  if (productKind === "credit" && paymentMethod === "test" && !user.isAdmin) {
-    return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 구매해 주세요." }, { status: 400 });
-  }
-
   if (productKind === "credit" && paymentMethod !== "bank_transfer" && !user.isAdmin) {
     return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 구매해 주세요." }, { status: 400 });
   }
 
-  if (productKind === "goods" && paymentMethod !== "test") {
-    return NextResponse.json({ error: "굿즈 주문 방식이 올바르지 않습니다." }, { status: 400 });
+  if (productKind === "goods" && paymentMethod !== "bank_transfer") {
+    return NextResponse.json({ error: "굿즈 주문은 무통장 입금으로 진행해 주세요." }, { status: 400 });
   }
 
   const amountKrw = getDiscountedPrice(product.price_krw, product.discount_percent);
@@ -99,10 +95,11 @@ export async function POST(request: Request) {
     purchaseId = data.id;
   }
 
-  if (paymentMethod === "bank_transfer" && productKind === "credit") {
+  if (paymentMethod === "bank_transfer") {
     await notifyDonationOrderCreated(purchaseId, {
       orderId: purchaseId,
       orderReference,
+      productKind,
       productName: product.name,
       amountKrw,
       cashAmount: product.cash_amount ?? 0,

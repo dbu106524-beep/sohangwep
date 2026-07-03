@@ -399,6 +399,36 @@ export async function shipPurchaseAction(formData: FormData) {
   revalidatePath("/profile");
 }
 
+export async function deletePurchasesAction(formData: FormData) {
+  await assertAdmin();
+
+  const ids = formData
+    .getAll("purchase_ids")
+    .map((value) => String(value))
+    .filter(Boolean);
+
+  if (!ids.length) {
+    revalidatePath("/admin/purchases");
+    return;
+  }
+
+  if (!hasSupabaseEnv()) {
+    revalidatePath("/admin/purchases");
+    return;
+  }
+
+  const supabase = await createSupabaseServiceClient();
+  const { error } = await supabase.from("purchases").delete().in("id", ids);
+
+  if (error) {
+    throw new Error(`구매내역 삭제에 실패했습니다: ${error.message}`);
+  }
+
+  revalidatePath("/admin/purchases");
+  revalidatePath("/profile/purchases");
+  revalidatePath("/profile");
+}
+
 export async function createProductAction(formData: FormData) {
   await assertAdmin();
 

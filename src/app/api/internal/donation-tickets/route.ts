@@ -22,7 +22,6 @@ export async function GET(request: Request) {
   const { data: purchases, error } = await supabase
     .from("purchases")
     .select("*")
-    .eq("product_kind", "credit")
     .eq("payment_provider", "bank_transfer")
     .eq("status", "pending")
     .is("donation_ticket_channel_id", null)
@@ -58,6 +57,7 @@ export async function GET(request: Request) {
     return {
       orderId: purchase.id,
       orderReference: purchase.payment_reference,
+      productKind: purchase.product_kind,
       productName: purchase.product_name,
       amountKrw: purchase.amount_krw,
       cashAmount: product?.cash_amount ?? 0,

@@ -1012,6 +1012,49 @@ body.lightbox-open {
   gap: 16px;
 }
 
+.admin-purchase-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: end;
+  padding: 18px;
+}
+
+.admin-filter-row,
+.admin-purchase-actions,
+.purchase-check-label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-filter-row label {
+  display: grid;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.purchase-check-label {
+  color: #fff;
+  font-weight: 950;
+}
+
+.purchase-row-check {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffd36b;
+}
+
+.button.danger {
+  border-color: rgba(255, 120, 140, 0.65);
+  background: rgba(118, 39, 65, 0.74);
+  color: #fff;
+}
+
 .admin-order-card {
   display: grid;
   gap: 18px;

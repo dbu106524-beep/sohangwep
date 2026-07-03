@@ -1,6 +1,7 @@
 type DonationOrderPayload = {
   orderId: string;
   orderReference: string;
+  productKind: "credit" | "goods";
   productName: string;
   amountKrw: number;
   cashAmount: number;
