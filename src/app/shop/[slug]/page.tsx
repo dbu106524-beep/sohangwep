@@ -53,8 +53,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <p>{product.details}</p>
           <div className="notice-box">
             {isGoods
-              ? "굿즈는 현재 관리자 테스트 주문만 가능합니다."
-              : "무통장 입금 신청 후 디스코드 후원 채널에서 계좌 안내와 입금 확인 절차를 확인할 수 있습니다."}
+              ? "배송 정보를 입력한 뒤 주문하면 관리자 확인 후 발송 준비가 진행됩니다."
+              : "무통장 입금 구매 신청 후 디스코드 결제 확인 채널에서 계좌 안내와 입금 확인 절차를 확인할 수 있습니다."}
           </div>
           <PurchaseButton productId={product.id} productKind={product.product_kind ?? "credit"} />
         </div>

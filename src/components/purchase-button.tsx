@@ -121,7 +121,7 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
     setPending(false);
 
     if (!response.ok || !data.redirectUrl) {
-      showError(data.error ?? "결제 준비 중 문제가 발생했습니다.");
+      showError(data.error ?? "주문 처리 중 문제가 발생했습니다.");
       return;
     }
 
@@ -159,17 +159,17 @@ export function PurchaseButton({ productId, productKind = "credit" }: { productI
             <textarea value={shippingMessage} onChange={(event) => setShippingMessage(event.target.value)} placeholder="문 앞에 놓아주세요 등" rows={3} />
           </label>
           <button type="button" onClick={() => checkout("test")} disabled={pending} className="button primary">
-            {pending ? "주문 준비 중..." : "굿즈 테스트 주문하기"}
+            {pending ? "주문 접수 중..." : "굿즈 주문하기"}
           </button>
         </div>
       ) : (
         <div className="payment-method-box">
           <p className="font-black text-white">결제 방법</p>
           <button type="button" onClick={() => checkout("bank_transfer")} disabled={pending} className="button primary">
-            {pending ? "후원 신청 중..." : "무통장 입금으로 스타크레딧 신청"}
+            {pending ? "구매 신청 중..." : "무통장 입금으로 스타 크레딧 구매하기"}
           </button>
           <p className="text-sm font-bold text-white/70">
-            신청 후 디스코드에 전용 후원 채널이 열립니다. 채널 안내에 따라 입금 후 입금자명을 남겨주세요.
+            구매 신청 후 디스코드에 전용 결제 확인 채널이 열립니다. 채널 안내에 따라 입금 후 입금자명을 남겨 주세요.
           </p>
         </div>
       )}

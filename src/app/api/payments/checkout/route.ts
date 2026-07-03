@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const productId = body?.productId;
 
   if (!productId) {
-    return NextResponse.json({ error: "productId is required." }, { status: 400 });
+    return NextResponse.json({ error: "상품 정보가 없습니다." }, { status: 400 });
   }
 
   const products = await getProducts();
@@ -38,20 +38,16 @@ export async function POST(request: Request) {
   const productKind = product.product_kind ?? "credit";
   const paymentMethod = body?.paymentMethod === "bank_transfer" ? "bank_transfer" : "test";
 
-  if (paymentMethod === "test" && !user.isAdmin) {
-    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
-  }
-
-  if (productKind === "goods" && !user.isAdmin) {
-    return NextResponse.json({ error: "굿즈 주문은 아직 관리자 테스트만 가능합니다." }, { status: 403 });
-  }
-
-  if (productKind === "goods" && paymentMethod !== "test") {
-    return NextResponse.json({ error: "굿즈는 아직 테스트 주문만 가능합니다." }, { status: 400 });
+  if (productKind === "credit" && paymentMethod === "test" && !user.isAdmin) {
+    return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 구매해 주세요." }, { status: 400 });
   }
 
   if (productKind === "credit" && paymentMethod !== "bank_transfer" && !user.isAdmin) {
-    return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 신청해주세요." }, { status: 400 });
+    return NextResponse.json({ error: "스타 크레딧은 무통장 입금으로 구매해 주세요." }, { status: 400 });
+  }
+
+  if (productKind === "goods" && paymentMethod !== "test") {
+    return NextResponse.json({ error: "굿즈 주문 방식이 올바르지 않습니다." }, { status: 400 });
   }
 
   const amountKrw = getDiscountedPrice(product.price_krw, product.discount_percent);
@@ -64,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "굿즈 주문에는 받는 사람, 연락처, 배송지 주소가 필요합니다." }, { status: 400 });
   }
 
-  const orderReference = `${paymentMethod === "bank_transfer" ? "AST" : "test"}_${Date.now()}`;
+  const orderReference = `${productKind === "goods" ? "GOODS" : paymentMethod === "bank_transfer" ? "AST" : "test"}_${Date.now()}`;
   let purchaseId = orderReference;
 
   if (hasSupabaseEnv()) {
@@ -122,9 +118,11 @@ export async function POST(request: Request) {
     });
   }
 
+  const mode = productKind === "goods" ? "goods" : paymentMethod;
+
   return NextResponse.json({
-    mode: paymentMethod,
+    mode,
     purchaseId,
-    redirectUrl: `${getSiteUrl()}/shop/success?order=${encodeURIComponent(purchaseId)}&mode=${paymentMethod}`,
+    redirectUrl: `${getSiteUrl()}/shop/success?order=${encodeURIComponent(purchaseId)}&mode=${mode}`,
   });
 }

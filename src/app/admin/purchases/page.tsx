@@ -36,7 +36,7 @@ export default async function AdminPurchasesPage() {
       <section className="page-hero art-hero shop-hero">
         <span className="eyebrow">ADMIN ORDERS</span>
         <h1>구매내역 관리</h1>
-        <p>유저별 주문, 후원 신청, 지급 상태, 굿즈 배송 정보를 관리합니다.</p>
+        <p>유저별 주문, 스타 크레딧 구매 신청, 지급 상태, 굿즈 배송 정보를 관리합니다.</p>
         <Link href="/admin" className="text-link">
           관리자 페이지로 돌아가기
         </Link>
