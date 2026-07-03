@@ -42,6 +42,7 @@ export const siteSettings = seed.settings;
 export const siteNavItems = [
   { href: "/notices", label: "공지사항" },
   { href: "/updates", label: "업데이트" },
+  { href: "/events", label: "이벤트" },
   { href: "/community", label: "커뮤니티" },
   { href: "/shop", label: "상점" },
 ];
