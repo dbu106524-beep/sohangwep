@@ -30,7 +30,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <ImageLightbox
               images={imageUrls}
               alt={product.name}
-              className={`${imageUrls.length > 1 ? "product-image-gallery" : "product-image"}${isGoods ? " goods-product-image" : ""}`}
+              className={`product-image${isGoods ? " goods-product-image" : ""}`}
+              mode="slider"
             />
           ) : (
             <div className="product-image">
@@ -40,7 +41,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </div>
           )}
         </div>
-        <div className="glass-card">
+        <div className="glass-card product-detail-info">
           <span className="badge">
             {isGoods ? "굿즈 배송 상품" : `${product.cash_amount.toLocaleString("ko-KR")} 스타 크레딧 지급`}
           </span>
