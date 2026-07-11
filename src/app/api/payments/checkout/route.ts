@@ -89,7 +89,8 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.warn("[Checkout insert]", error.message);
+      return NextResponse.json({ error: "주문을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: 500 });
     }
 
     purchaseId = data.id;
