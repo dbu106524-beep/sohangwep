@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpaceEffects } from "@/components/space-effects";
 import { getCurrentUser } from "@/lib/auth";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: {
@@ -40,6 +41,7 @@ export default async function RootLayout({
         <SiteHeader user={user} />
         {children}
         <SiteFooter user={user} />
+        <SpeedInsights />
       </body>
     </html>
   );
